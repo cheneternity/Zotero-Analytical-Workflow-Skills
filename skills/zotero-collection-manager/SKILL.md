@@ -3,7 +3,7 @@ name: zotero-collection-manager
 description: 批量处理 Zotero 指定分类下的论文，支持断点续传。读取数据库文献列表，比对本地处理日志后，仅对未完成的条目逐一调用精读流程，实时更新进度。
 ---
 
-# Zotero Collection Manager (v2.0 增量更新版)
+# Zotero Collection Manager
 
 ## 1. 任务初始化与断点读取
 - **定位分类与目录**：获取目标 Zotero 分类名称，并设定目标路径为 `D:\ResearchVault\note\<分类名称>\`。
