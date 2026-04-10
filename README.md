@@ -76,7 +76,6 @@ Zotero-analytical-writer/
 
 仓库内容目前默认基于 Windows 路径习惯编写，并保留了你当前环境中的默认目录，例如：
 
-- `D:\research\zotero_batch`
 - `D:\ResearchVault\note`
 
 如果在别的机器或仓库环境中使用，建议通过命令行参数覆盖这些默认路径，而不是直接依赖硬编码默认值。
