@@ -1,39 +1,94 @@
-# Zotero Analytical Writer
+# Zotero Analytical Workflow Skills
 
-一个用于论文精读笔记生成的 Codex skill 包，包含：
+这不是单个“论文精读 skill”，而是一整条 Zotero 文献处理工作流的打包仓库。
 
-- `SKILL.md`：精读流程与约束说明
-- `论文精读模板.md`：Obsidian 精读模板
-- `README.md`：使用说明
+仓库当前包含 3 个核心 skill、1 个精读模板，以及 2 个辅助脚本，用来覆盖：
+
+- 论文分类批处理与断点续跑
+- 论文元数据、批注、全文缓存提取
+- 中文精读笔记生成与模板套用
 
 ## 目录结构
 
 ```text
-zotero-analytical-writer-github/
+Zotero-analytical-writer/
 ├── README.md
-├── SKILL.md
-└── 论文精读模板.md
+├── skills/
+│   ├── zotero-collection-manager/
+│   │   └── SKILL.md
+│   ├── zotero-data-fetcher/
+│   │   └── SKILL.md
+│   └── zotero-analytical-writer/
+│       └── SKILL.md
+├── templates/
+│   └── 论文精读模板.md
+└── scripts/
+    ├── regenerate_template_notes.py
+    └── zotero_collection_manager_v2_pilot.py
 ```
 
-## 用途
+## 工作流关系
 
-这个 skill 用来接收论文原始语料，按中文学术笔记风格进行重构，并严格套用精读模板输出 Obsidian 笔记。
+推荐按下面顺序使用：
 
-它特别强调：
+1. `zotero-collection-manager`
+   负责读取某个 Zotero 分类、比对处理日志、筛出未完成文献并串行调度。
+2. `zotero-data-fetcher`
+   负责抓取单篇论文的元数据、批注、全文缓存和附件信息。
+3. `zotero-analytical-writer`
+   负责中文逻辑重构、Frontmatter 提炼、模板套用和 Obsidian 笔记写入。
+
+其中：
+
+- `templates/论文精读模板.md` 是精读模板
+- `scripts/regenerate_template_notes.py` 是笔记重生成脚本
+- `scripts/zotero_collection_manager_v2_pilot.py` 是批处理/断点续跑辅助脚本
+
+## 仓库内容说明
+
+### `skills/zotero-collection-manager`
+
+适用于整批处理 Zotero 分类。它强调：
+
+- 读取并维护 `_ProcessLog_进度记录.md`
+- 自动跳过已成功或已跳过条目
+- 按篇串行执行，处理完一篇立即写入日志
+- 将抓取与写作拆给下游 skill
+
+### `skills/zotero-data-fetcher`
+
+适用于单篇论文语料准备。它强调：
+
+- 先读 Zotero 数据目录和数据库
+- 优先取批注，其次取全文缓存，再考虑本地 PDF
+- 保持原始语言，不在此步骤翻译或总结
+
+### `skills/zotero-analytical-writer`
+
+适用于最终精读笔记生成。它强调：
 
 - Frontmatter 字段必须高度提炼，不能机械复制摘要
-- 研究区、数据来源、方法、核心变量等字段要精准提取
-- 公式识别要防乱码、防胡编，并在需要时调用 OCR
-- 正文分析区要过滤作者单位、基金号、投稿须知等学术噪音
+- 研究区、数据来源、方法、核心变量要精准提取
+- 公式提取要防乱码、防胡编，并支持 OCR 兜底
+- 正文区要过滤作者单位、基金号、投稿规范等学术噪音
 
-## 使用方式
+## 使用建议
 
-1. 将本目录上传到 GitHub 仓库。
-2. 使用时确保 `SKILL.md` 与 `论文精读模板.md` 保持在同一目录。
-3. `SKILL.md` 当前通过相对路径 `./论文精读模板.md` 引用模板，因此下载后无需修改为本机绝对路径。
+- 如果你是把这些 skill 用于 Codex 或类似代理系统，建议保持当前目录结构不变。
+- `skills/zotero-analytical-writer/SKILL.md` 已经改为使用仓库内相对模板路径：`../../templates/论文精读模板.md`。
+- `scripts/zotero_collection_manager_v2_pilot.py` 已优先加载仓库内的 `scripts/regenerate_template_notes.py`。
 
-## 建议
+## 环境说明
 
-- 如果你后续要给别人分发，建议仓库名也使用 `zotero-analytical-writer`
-- 如果你未来更换模板文件名，记得同步修改 `SKILL.md` 中的模板路径
-- 如果你希望模板进一步参数化，可以后续再补一个示例输入输出
+仓库内脚本目前默认基于 Windows 路径习惯编写，并保留了你当前环境中的默认目录，例如：
+
+- `D:\research\zotero_batch`
+- `D:\ResearchVault\note`
+
+如果在别的机器或仓库环境中使用，建议通过命令行参数覆盖这些默认路径，而不是直接依赖硬编码默认值。
+
+## 后续可继续补充
+
+- 增加示例输入与输出
+- 增加安装说明或依赖说明
+- 为每个 skill 单独补充测试样例或演示数据
