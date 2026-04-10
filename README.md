@@ -2,7 +2,7 @@
 
 这不是单个“论文精读 skill”，而是一整条 Zotero 文献处理工作流的打包仓库。
 
-仓库当前包含 3 个核心 skill、1 个精读模板，以及 2 个辅助脚本，用来覆盖：
+仓库当前包含 3 个核心 skill 和 1 个精读模板，用来覆盖：
 
 - 论文分类批处理与断点续跑
 - 论文元数据、批注、全文缓存提取
@@ -22,9 +22,6 @@ Zotero-analytical-writer/
 │       └── SKILL.md
 ├── templates/
 │   └── 论文精读模板.md
-└── scripts/
-    ├── regenerate_template_notes.py
-    └── zotero_collection_manager_v2_pilot.py
 ```
 
 ## 工作流关系
@@ -41,8 +38,6 @@ Zotero-analytical-writer/
 其中：
 
 - `templates/论文精读模板.md` 是精读模板
-- `scripts/regenerate_template_notes.py` 是笔记重生成脚本
-- `scripts/zotero_collection_manager_v2_pilot.py` 是批处理/断点续跑辅助脚本
 
 ## 仓库内容说明
 
@@ -76,11 +71,10 @@ Zotero-analytical-writer/
 
 - 如果你是把这些 skill 用于 Codex 或类似代理系统，建议保持当前目录结构不变。
 - `skills/zotero-analytical-writer/SKILL.md` 已经改为使用仓库内相对模板路径：`../../templates/论文精读模板.md`。
-- `scripts/zotero_collection_manager_v2_pilot.py` 已优先加载仓库内的 `scripts/regenerate_template_notes.py`。
 
 ## 环境说明
 
-仓库内脚本目前默认基于 Windows 路径习惯编写，并保留了你当前环境中的默认目录，例如：
+仓库内容目前默认基于 Windows 路径习惯编写，并保留了你当前环境中的默认目录，例如：
 
 - `D:\research\zotero_batch`
 - `D:\ResearchVault\note`
