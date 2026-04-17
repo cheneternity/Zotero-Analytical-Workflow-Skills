@@ -3,7 +3,7 @@ name: zotero-collection-manager
 description: 批量处理 Zotero 指定分类下的论文，支持断点续传。读取数据库文献列表，比对本地处理日志后，仅对未完成的条目逐一调用精读流程，实时更新进度。
 ---
 
-# Zotero Collection Manager (v2.0 增量更新版)
+# Zotero Collection Manager
 
 ## 1. 任务初始化与断点读取
 - **定位分类与目录**：获取目标 Zotero 分类名称，并设定目标路径为 `D:\ResearchVault\note\<分类名称>\`。
@@ -27,7 +27,7 @@ description: 批量处理 Zotero 指定分类下的论文，支持断点续传�
 4. **实时打卡（关键点）**：当前论文写入 Obsidian 成功后，立即打开 `_ProcessLog_进度记录.md`，追加一行记录：
    - 格式要求：`- [x] [时间戳] | 状态 | Item Key | 论文标题`
    - 例如：`- [x] 2024-05-20 14:00 | ✅ 成功 | ABCD123 | From heat to high-tech...`
-5. **刷新根 Dataview 索引页（新增论文时强制执行）**：若当前论文对应的 `.md` 文件是首次创建，而不是覆盖旧文件，则在写入成功后立刻刷新 `D:\ResearchVault` 根目录下的 `文献索引.md`、`研究主题索引.md`、`研究方法索引.md` 和 `字段补全检查.md`。优先调用 `D:\research\zotero_batch\refresh_research_vault_dataview_indexes.py`，不要手工维护。
+5. **刷新根 Dataview 索引页（新增论文时强制执行）**：若当前论文对应的 `.md` 文件是首次创建，而不是覆盖旧文件，则在写入成功后立刻刷新 `D:\ResearchVault` 根目录下的 `文献索引.md`、`研究主题索引.md`、`研究方法索引.md` 和 `字段补全检查.md`。
 
 ## 4. 输出执行报告
 全部循环结束后，向用户输出本轮的执行简报：
