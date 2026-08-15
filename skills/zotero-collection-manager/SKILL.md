@@ -1,37 +1,68 @@
 ---
 name: zotero-collection-manager
-description: 批量处理 Zotero 指定分类下的论文，支持断点续传。读取数据库文献列表，比对本地处理日志后，仅对未完成的条目逐一调用精读流程，实时更新进度。
+description: "按 Zotero Collection 增量调度 Fetcher、Fulltext Archiver、Analytical Writer 和一致性校验，使用可重试状态而不是以“存在笔记”或临时跳过判断完成；默认单篇/小批量运行，支持断点续传。"
 ---
 
 # Zotero Collection Manager
 
-## 1. 任务初始化与断点读取
-- **定位分类与目录**：获取目标 Zotero 分类名称，并设定目标路径为 `D:\ResearchVault\note\<分类名称>\`。
-- **读取进度日志（Breakpoint）**：在目标路径下查找 `_ProcessLog_进度记录.md` 或 `.json` 进度缓存文件。
-  - 若存在，解析其中已被标记为 `✅ 成功` 或 `⚠️ 跳过` 的论文 `Item Key` 或标题。
-  - 若不存在，自动在目标路径下创建该进度文件。
+## 调度链
 
-## 2. 数据获取与任务过滤
-- **查询数据库**：获取该分类下所有论文的清单（包含 `Item Key` 和 `标题`）。
-- **计算差集（过滤）**：
-  - 将总清单与进度日志进行比对。
-  - 剔除已完成（成功/跳过）的条目，生成本轮的**待处理队列**。
-  - 如果待处理队列为空，提示用户“该分类下所有论文已处理完毕”。
+```text
+Fetcher
+  ↓
+Fulltext Archiver
+  ↓
+Analytical Writer
+  ↓
+Link Validation
+  ↓
+Dataview Refresh（仅需要时）
+  ↓
+Process Log
+```
 
-## 3. 循环调度引擎（实时存档机制）
-针对待处理队列中的每一篇论文，严格串行执行，并且**每处理完一篇必须立即更新日志**：
-1. **清理上下文**：强制清空内存变量，重置大模型分析状态。
-2. **抓取数据 (Fetcher)**：传递任务给 `zotero-data-fetcher`。
-   - *异常捕获*：若抓取失败（如无附件、无缓存），将状态记录为 `❌ 失败（原因）`，写入日志，跳过当前篇。
-3. **生成笔记 (Writer)**：传递语料给 `zotero-analytical-writer` 写入 Obsidian。
-4. **实时打卡（关键点）**：当前论文写入 Obsidian 成功后，立即打开 `_ProcessLog_进度记录.md`，追加一行记录：
-   - 格式要求：`- [x] [时间戳] | 状态 | Item Key | 论文标题`
-   - 例如：`- [x] 2024-05-20 14:00 | ✅ 成功 | ABCD123 | From heat to high-tech...`
-5. **刷新根 Dataview 索引页（新增论文时强制执行）**：若当前论文对应的 `.md` 文件是首次创建，而不是覆盖旧文件，则在写入成功后立刻刷新 `D:\ResearchVault` 根目录下的 `文献索引.md`、`研究主题索引.md`、`研究方法索引.md` 和 `字段补全检查.md`。
+各环节保持职责边界，不在 Manager 中重写全文或中文笔记。
 
-## 4. 输出执行报告
-全部循环结束后，向用户输出本轮的执行简报：
-- 本轮总计发现未处理文献 [X] 篇。
-- ✅ 新增成功：[数量] 篇
-- ❌ 新增失败/待确认：[数量] 篇
-- *附言：进度已实时同步至 Obsidian 文件夹内的日志文件中，下次执行将自动跳过以上成功条目。*
+## 增量与安全规则
+
+- 以 Zotero `zotero_key` 而不是标题作为主键。
+- 先读取现有日志；成功条目只在所有核心条件满足时跳过。
+- 默认只处理用户指定的 Collection、单篇或小批量；不得自动批量重跑全库、迁移所有旧笔记或移动 Zotero PDF。
+- 已有 analytical note 但没有全文时，只补 Fulltext 与链接，不重新生成整篇笔记。
+- 当批次请求包含 Knowledge 整理或“全部论文”时，批次调度必须先读取 `D:\ResearchVault\模板\知识库模板\README_知识库模板说明.md` 和对应的主题/概念/方法/关系/争议模板，并建立逐篇 coverage ledger；不能以“已有笔记”或“已生成综合页”代替 Knowledge 覆盖。
+- Knowledge 写作必须同时解析 Analytical Note 的结构化字段和对应 `D:\ResearchVault\03fulltext` 原文。Fulltext 可用时，精确结论、公式、阈值、机制和引语必须回到原文核验；Fulltext 缺失时只能保留 `note_supported` / `FULLTEXT_DEFERRED`，不得补写页码或反向生成引语。
+- 批次完成条件包括：每篇论文至少进入一个真实 `source_notes`，页面使用当前知识库模板的完整可见章节，覆盖账本无未解释遗漏，且 Knowledge validator 与模板审查均通过。
+- `MinerU_batch` 只作为可复用历史来源；发现标题对应多个 Item Key 时暂停该条目并报告冲突。
+- `⚠️ 跳过` 不是永久完成。只有用户明确确认永久忽略才可终止；临时错误必须可重试。
+
+## 每篇论文的状态模型
+
+至少记录：
+
+```json
+{
+  "item_key": "Q22PFLNV",
+  "pdf_found": true,
+  "fulltext": true,
+  "images_valid": true,
+  "note": true,
+  "linked": true,
+  "page_mapping": "unknown",
+  "indexes_refreshed": false
+}
+```
+
+核心状态：
+
+- `COMPLETE`：`pdf_found && fulltext && images_valid && note && linked` 全部为真。
+- `PARTIAL_FULLTEXT_MISSING`：Note 存在但 Fulltext 未建立。
+- `PARTIAL_NOTE_MISSING`：Fulltext 存在但 Note 未建立。
+- `IMAGES_INVALID`：全文存在但有图片缺失或错误引用。
+- `PDF_NOT_FOUND`：找不到父条目 PDF，可重试。
+- `MINERU_FAILED`：MinerU 失败，可重试。
+- `KEY_CONFLICT`：主键或标题映射冲突，需要人工确认。
+- `PERMANENTLY_IGNORED`：仅用户明确确认后使用。
+
+## 日志
+
+每篇论文完成一个阶段后立即记录 Item Key、标题、时间、状态、原因和路径；不要只记录“存在笔记”。Collection Manager 的报告应区分新增成功、部分完成、失败和待人工确认。

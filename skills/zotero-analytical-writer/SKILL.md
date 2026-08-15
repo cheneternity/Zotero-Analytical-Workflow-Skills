@@ -1,48 +1,76 @@
 ---
 name: zotero-analytical-writer
-description: 接收原始语料，进行中文逻辑重构，严格按照当前 Obsidian 模板格式化并写入文件。
+description: "使用 Zotero metadata、批注和 MinerU Fulltext，严格按 D:\\ResearchVault\\模板\\论文精读模板.md 创建或更新 ResearchVault 中文精读笔记，并确保 Zotero 链接、公式与原文引用真实可追溯。"
 ---
 
 # Zotero Analytical Writer
 
-## 1. Frontmatter 属性提取
-在生成 Frontmatter 时，必须经过深度思考与提炼，**严禁直接大段复制摘要**。每个字段必须严格遵守以下定义，且**长度限制在一句话（10-30字）以内**：
+## Canonical template
 
-* **`theme`（研究主题）**：一句话概括核心研究问题。（❌ 错误示范：复制整段摘要开头。✅ 正确示范：探讨城市创新空间生态位适宜性的评价指标与空间格局。）
-* **`study_area`（研究区/样本）**：必须**严格依据标题和摘要**提取真实地名或样本范围，绝不能自行脑补常见城市。（❌ 错误示范：北京、上海等。✅ 正确示范：江苏省南京市。）
-* **`data_source`（数据来源）**：仅提取**数据提供方、数据库名称或时间跨度**，绝不能包含作者信息或摘要前言！（❌ 错误示范：作者单位+邮编+摘要... ✅ 正确示范：南京市统计局数据及相关地理空间矢量数据，年份为 2020 年。）
-* **`methodology`（研究方法）**：必须具体到**模型名称或分析工具**，严禁与 theme 字段重复！（❌ 错误示范：基于生态位视角探讨... ✅ 正确示范：构建 3 个维度的评价指标体系，结合 GIS 空间分析方法。）
-* **`core_variable`（核心变量/指标）**：提取具体的**自变量、因变量或评价维度**，严禁堆砌论文的 Keywords！（❌ 错误示范：创新经济地理、创新生态系统。✅ 正确示范：资源生态位、环境生态位、技术生态位适宜度。）
-* **`key_finding`（核心发现）**：用最精炼的语言总结最重要的结论，去掉“结果表明”等废话。
-* **`relevance`（研究启发）**：说明该文的具体闪光点（如：提供了南京的对比基准 / 提供了生态位测度指标），拒绝“可用于补充文献脉络”这种正确的废话。
+For every Note creation or content update, read `D:\ResearchVault\模板\论文精读模板.md` first and use it as the sole structural authority. Start a new Note by copying that template; for an existing Note, update it in place and normalize its body to the template rather than introducing a parallel structure.
 
-**⚠️ 强制校验机制**：在写入 Frontmatter 前，核对 `data_source` 中是否混入了类似“摘要：”、“作者：”、“210096”等无效字符；核对 `study_area` 是否与文章标题中的地名冲突。如发现，必须重写该字段。
+Keep the visible section order exactly as follows:
 
-## 2. 模板套用与数学公式处理
-模板路径：`../../templates/论文精读模板.md`
+`基本信息 → 一句话摘要 → 研究对象 → 研究方法（方法概述 → 方法分析） → 数据来源 → 研究结论 → 关联精读笔记 → 我的判断`
 
-- **结论结构**：灵活调整条目数，严格采用成对结构（主要发现 + 原文引用）。引用必须附带 `zotero://open-pdf/library/items/<pdfKey>?page=<页码>`。
-- **数学公式提取铁律与连带阻断（防乱码与胡编乱造）**：
-  1. **无效公式判定**：如果提取到的公式内容仅包含孤立的求和号（`\sum`）、极短的残片（如 `ic x`）、无意义的英文字母堆叠，则**强制判定为无效乱码**。绝对禁止强行套用 `$$...$$` 输出。
-  2. **连带删除机制（关键）**：如果公式被判定为无效，使用了占位符，或者原文无公式，**必须彻底删除该公式对应的“公式拆解”、“符号代表什么”等所有下级解释区块**。绝对禁止为残缺符号或占位符凭空捏造解释（如重复生成“用于加权汇总”的废话）。
-  3. **调用本地 OCR（最高优）**：如指令提供 `image_path`，立即调用 MCP 工具 `formula_ocr`。
-  4. **占位底线**：遇乱码且无截图时，仅输出单行占位符 `$$\text{【公式复杂/乱码，如需精准提取请截图至 samples 目录并调用 formula_ocr】}$$`，后续拆解区块直接留空或删除。
+Keep the template's table, field labels, heading levels, and frontmatter fields. Replace every retained placeholder with verified content; remove unused optional formula blocks, surplus finding/quote pairs, and placeholder related-note links. Do not add legacy headings such as `研究对象与问题`, `整体流程`, `数据与证据定位`, `局限与后续问题`, or `Zotero信息`. Put limitations only in `方法局限`、`数据局限` and `我的判断`.
 
-## 3. 正文内容纯净度控制
-在填写“具体步骤”、“数据来源”、“样本来源”等正文分析区块时，必须经过智能过滤，严禁机械搬运：
+## 职责与语料顺序
 
-- **学术垃圾黑名单**：绝对禁止将以下内容写入笔记的任何分析字段：作者姓名、工作单位（如“XX大学XX学院”）、通讯地址、邮编、邮箱、基金项目编号（如“52008087”）、期刊投稿须知或排版规范（如“稿件内容应符合...”）。
-- **提炼而非凑数**：必须从原文的“数据与方法”章节提取真正的研究步骤和数据集名称。如果在摘要或导言附近抓不到具体数据，宁可如实写“缓存文本未包含具体数据来源，需查阅完整正文”，也绝不能拿作者简介和基金号来凑字数！
+Writer 只负责分析层：`metadata + annotations + MinerU Fulltext + 必要时 PDF → 中文 analytical note`。
 
-## 4. 写入与终检
-- **路径指定**：写入 `对应论文库位置`。
-- **后置校验**：在最终保存前进行自我检查：
-  1. Frontmatter 必填概括字段是否为全中文？
-  2. 是否有未闭合的 `$` 符号？
-  3. 是否包含有效跳转的 `zotero://select/...` 和 PDF 链接？
-- 若校验通过，执行写入操作。
-- **索引页刷新（新增论文时强制执行）**：若本次写入产生了新的论文笔记文件，而不是覆盖旧文件，则必须立即刷新 `论文库` 根目录下 4 个 Dataview 索引页：
-  1. `文献索引.md`
-  2. `研究主题索引.md`
-  3. `研究方法索引.md`
-  4. `字段补全检查.md`
+- Fulltext 是原文证据，分析笔记是中文理解层；不得把二者混为一谈。
+- 仍保留现有的 `theme`、`study_area`、`data_source`、`methodology`、`core_variable`、`key_finding`、`relevance`、中文逻辑重构、学术垃圾过滤、公式防乱码、Zotero URI 和 Dataview 刷新逻辑。
+- 不负责 PDF→MinerU；缺全文时交给 `zotero-fulltext-archiver`，不要自行伪造原文。
+- 若已有正式 Fulltext，先复用并校验，不因 Note 模板修整而重新运行 MinerU。
+
+## Knowledge handoff contract
+
+The Analytical Note is the structural-library layer for later Knowledge synthesis; it is not a substitute for the Knowledge Page template. Preserve machine-readable fields and make the following handoff explicit whenever the Note will feed Knowledge:
+
+- distinguish author-reported findings, methods, limitations, and the writer's interpretation;
+- retain the exact `zotero_key`, `note_path`, `fulltext_path`, formulas, quotations, and PDF/Fulltext entry points;
+- record which conclusions were checked against Fulltext and which remain Note-only;
+- never mark a Knowledge claim as `fulltext_verified` merely because the Note contains a summary;
+- if a field or conclusion cannot be located in the Note or Fulltext, write “未在当前材料中定位到可核验原文”，not a reconstructed quote or inferred page number.
+
+When a later Knowledge task asks for “all papers”, the Knowledge Maintainer must read the Note's structured fields and the linked Fulltext independently; the Writer must not collapse the two layers into a single unsupported summary.
+
+## Frontmatter 与稳定身份
+
+Keep the template frontmatter (`title`、`aliases`、`tags`、`created`、`source`、`author`、`year`、`theme`、`study_area`、`data_source`、`methodology`、`core_variable`、`key_finding`、`relevance`) and replace its placeholders with verified values. Add the following identity and navigation fields after the template fields when the values are known:
+
+```yaml
+type: literature-note
+zotero_key: "Q22PFLNV"
+pdf_key: "4RMSR7ZR"
+doi: "..."
+collection: "创新经济地理"
+note_path: "论文库/创新经济地理/论文标题.md"
+fulltext_path: "fulltext/创新经济地理/Q22PFLNV.md"
+```
+
+Do not batch-rewrite untouched historical Notes. When updating a specified Note, normalize that same file to the template and preserve verified content and stable identity; never create a duplicate Note. Add only confirmable fields and fulltext entry points. Treat `zotero_key` as the primary key and `pdf_key` as the attachment key. Prefer `note/<collection>/` for new Notes while continuing to support the Vault's current `论文库/` paths.
+
+## 原文引用规则
+
+- “主要发现 + 原文引用”中的原文必须真实出现在 MinerU Fulltext 或 Original PDF。
+- 严禁根据中文摘要反向生成英文 quote；定位不到时写“未在当前全文中定位到可核验原句”。
+- 引用要保留必要上下文，检查否定、条件、稳健性限定、假设和局限。
+- PDF 页码只有在可靠映射或实际 PDF 验证后才写入 `zotero://open-pdf/...?...page=` 或写入“PDF 第 n 页”；否则保留 Fulltext 链接并写“PDF 页码未验证”。不能因为 Fulltext 的 `page_mapping: unknown` 就猜页码，也不能因为页码未知而阻止通过原 PDF 直接核验引文。
+- 结论区每一条“主要发现”都要紧邻至少一条真实原文引用；先在 MinerU Fulltext 定位，再在 Original PDF 核对上下文、否定、条件、稳健性和页码。找不到原句时明确写“未在当前全文中定位到可核验原句”，不得反向生成 quote。
+
+## 内容与格式约束
+
+- `theme` 概括研究问题；`study_area`、`data_source`、`methodology`、`core_variable`、`key_finding`、`relevance` 必须来自真实材料，不复制大段摘要。
+- 过滤作者地址、单位、邮编、邮箱、基金号和排版垃圾；数据与方法缺失时如实说明。
+- 公式仅在原文可靠时保留；乱码或残片不强行解释，也不为占位符生成符号拆解。
+- 写入前检查 YAML、美元符号配对、`zotero://select/...` 和 PDF/Fulltext 入口。
+- 写入前检查标题层级、模板占位符是否清除、结论是否成对、公式是否闭合，以及 `fulltext_path` 与 Note↔Fulltext 双向入口是否存在。
+- `关联精读笔记` 只保留与研究问题、方法或结论存在直接关系的真实 Note；没有可确认的关联时，保留章节说明但移除示例链接。
+
+## 写入与索引
+
+1. 先判定是新建还是更新指定 Note；两种情况都先读取当前模板。更新时允许重排正文以匹配模板，但不得改变稳定身份或制造重复 Note。
+2. 在基本信息区的链接行加入 `全文 Markdown：[[fulltext/<collection>/<zotero_key>]]`（路径存在时），并保留可验证的 Zotero 入口。
+3. 新建论文笔记时才刷新四个根 Dataview 索引；更新既有 Note 不触发全库批量重写，但若标题、路径或索引字段变化，定向刷新受影响索引。
