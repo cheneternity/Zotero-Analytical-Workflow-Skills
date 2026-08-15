@@ -20,8 +20,8 @@ Zotero-analytical-writer/
 │   │   └── SKILL.md
 │   ├── zotero-data-fetcher/
 │   │   └── SKILL.md
-│   └── zotero-analytical-writer/
-│       └── SKILL.md
+│   ├── zotero-analytical-writer/
+│   │   └── SKILL.md
 │   ├── research-vault-knowledge-maintainer/
 │   │   └── SKILL.md
 │   └── research-vault-ingest-orchestrator/
