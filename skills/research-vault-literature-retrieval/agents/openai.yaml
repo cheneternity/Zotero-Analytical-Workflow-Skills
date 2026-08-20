@@ -1,0 +1,4 @@
+interface:
+  display_name: "Research Vault Retrieval"
+  short_description: "先从分析笔记召回论文，再按需进入 MinerU 全文与 Zotero PDF 取证"
+  default_prompt: "Use $research-vault-literature-retrieval for literature, concept, method, variable, evidence, and paper-comparison questions in D:\\ResearchVault. Retrieve analytical notes first, then resolve linked MinerU fulltext when precise source evidence is required, and use the original Zotero PDF for final verification when necessary."
