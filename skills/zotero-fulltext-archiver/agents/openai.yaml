@@ -1,0 +1,4 @@
+interface:
+  display_name: "Zotero Fulltext Archiver"
+  short_description: "将 Zotero PDF 或历史 MinerU 结果归档为可追踪全文"
+  default_prompt: "Use $zotero-fulltext-archiver to archive one Zotero PDF or migrate one verified MinerU result into ResearchVault fulltext, preserve the original text, normalize image paths, link the analytical note, and validate the result."

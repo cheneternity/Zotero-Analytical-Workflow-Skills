@@ -1,0 +1,4 @@
+interface:
+  display_name: "Research Vault Retrieval"
+  short_description: "先从论文库笔记定位论文，再定向进入 MinerU 全文取证"
+  default_prompt: "Use $research-vault-literature-retrieval for literature questions in D:\\ResearchVault. Search the analytical notes in 论文库 first; only after resolving the paper, follow fulltext_path or zotero_key into the corresponding MinerU fulltext, inheriting the note context, and use the original Zotero PDF only for final verification."

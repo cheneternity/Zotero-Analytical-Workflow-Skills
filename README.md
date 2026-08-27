@@ -2,12 +2,14 @@
 
 这不是单个“论文精读 skill”，而是一整条 Zotero 文献处理工作流的打包仓库。
 
-仓库当前包含 5 个核心 skill 和 1 个精读模板，用来覆盖：
+仓库当前包含 7 个核心 skill 和 7 个模板文件，用来覆盖：
 
 - 论文分类批处理与断点续跑
 - 论文元数据、批注、全文缓存提取
+- PDF/MinerU 全文归档与可追踪链接维护
 - 中文精读笔记生成与模板套用
 - 研究知识库的模板化维护与跨论文综合
+- ResearchVault 内的 Note-first 文献检索与原文核验
 - Zotero、Fulltext、精读笔记和 Knowledge 的端到端编排
 
 ## 目录结构
@@ -20,14 +22,25 @@ Zotero-analytical-writer/
 │   │   └── SKILL.md
 │   ├── zotero-data-fetcher/
 │   │   └── SKILL.md
+│   ├── zotero-fulltext-archiver/
+│   │   └── SKILL.md
 │   ├── zotero-analytical-writer/
 │   │   └── SKILL.md
 │   ├── research-vault-knowledge-maintainer/
 │   │   └── SKILL.md
-│   └── research-vault-ingest-orchestrator/
+│   ├── research-vault-ingest-orchestrator/
+│       └── SKILL.md
+│   └── research-vault-literature-retrieval/
 │       └── SKILL.md
 ├── templates/
-│   └── 论文精读模板.md
+│   ├── 论文精读模板.md
+│   └── 知识库模板/
+│       ├── README_知识库模板说明.md
+│       ├── 主题模板.md
+│       ├── 概念模板.md
+│       ├── 方法模板.md
+│       ├── 关系模板.md
+│       └── 争议模板.md
 ```
 
 ## 工作流关系
@@ -38,16 +51,21 @@ Zotero-analytical-writer/
    负责读取某个 Zotero 分类、比对处理日志、筛出未完成文献并串行调度。
 2. `zotero-data-fetcher`
    负责抓取单篇论文的元数据、批注、全文缓存和附件信息。
-3. `zotero-analytical-writer`
+3. `zotero-fulltext-archiver`
+   负责归档已处理的 PDF/MinerU 全文，整理图片和元数据，并维护 Note 与 Fulltext 的双向关联。
+4. `zotero-analytical-writer`
    负责中文逻辑重构、Frontmatter 提炼、模板套用和 Obsidian 笔记写入。
-4. `research-vault-ingest-orchestrator`
+5. `research-vault-ingest-orchestrator`
    负责按单篇论文编排 Zotero 身份、Fulltext、精读笔记、Knowledge 决策和校验。
-5. `research-vault-knowledge-maintainer`
+6. `research-vault-knowledge-maintainer`
    负责按知识库模板维护主题、概念、方法、关系、争议和综合页，并执行跨论文覆盖与证据审查。
+7. `research-vault-literature-retrieval`
+   处理 ResearchVault 文献问题时，先从 Analytical Notes 定位论文，再按需进入对应 Fulltext 或 Zotero PDF 核验。
 
 其中：
 
 - `templates/论文精读模板.md` 是精读模板
+- `templates/知识库模板/` 包含主题、概念、方法、关系、争议及使用说明模板
 
 ## 仓库内容说明
 
@@ -67,6 +85,10 @@ Zotero-analytical-writer/
 - 先读 Zotero 数据目录和数据库
 - 优先取批注，其次取全文缓存，再考虑本地 PDF
 - 保持原始语言，不在此步骤翻译或总结
+
+### `skills/zotero-fulltext-archiver`
+
+用于将 Zotero PDF 或已有 MinerU 结果归档为可追踪的 Fulltext Markdown。它负责保留 stable key、图片路径、前置元数据以及与 Analytical Note 的双向关联。
 
 ### `skills/zotero-analytical-writer`
 
@@ -95,10 +117,14 @@ Zotero-analytical-writer/
 - “全部论文”任务必须建立逐篇 coverage ledger，不能只生成综合页
 - 精确结论、公式、阈值、机制和引语需要 Fulltext 支持；缺全文时明确标注延后核验
 
+### `skills/research-vault-literature-retrieval`
+
+用于回答基于当前 ResearchVault 的文献问题。它以 Analytical Notes 为默认检索入口，以相应 Fulltext 或 Zotero PDF 做定向补充与核验，避免无边界扫描全文库。
+
 ## 使用建议
 
 - 如果你是把这些 skill 用于 Codex 或类似代理系统，建议保持当前目录结构不变。
-- `skills/zotero-analytical-writer/SKILL.md` 已经改为使用仓库内相对模板路径：`../../templates/论文精读模板.md`。
+- `zotero-analytical-writer` 使用 `D:\ResearchVault\模板\论文精读模板.md`；知识库维护 skill 使用 `D:\ResearchVault\模板\知识库模板`。
 
 ## 环境说明
 
