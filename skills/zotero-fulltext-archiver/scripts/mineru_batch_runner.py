@@ -38,7 +38,7 @@ def log(msg: str):
     print(f"[{datetime.now().isoformat(timespec='seconds')}] {msg}", flush=True)
 
 
-def run_one(entry, staging: Path, mineru, backend, dry_run):
+def run_one(entry, staging: Path, mineru, backend, model_source, dry_run):
     key = entry.get("zotero_key")
     pdf = entry.get("pdf")
     if not key or not pdf:
@@ -56,6 +56,7 @@ def run_one(entry, staging: Path, mineru, backend, dry_run):
         "--output", str(staging / key),
         "--mineru", mineru,
         "--backend", backend,
+        "--model-source", model_source,
     ]
     if dry_run:
         cmd.append("--dry-run")
@@ -79,6 +80,8 @@ def main(argv=None):
     p.add_argument("--staging", default="mineru-staging", help="staging output directory")
     p.add_argument("--mineru", default="mineru", help="MinerU executable (default: mineru on PATH)")
     p.add_argument("--backend", default="pipeline", help="MinerU backend (default: pipeline)")
+    p.add_argument("--model-source", default="modelscope",
+                   help="model download source: modelscope, huggingface, or local (default: modelscope)")
     p.add_argument("--dry-run", action="store_true", help="preflight only, stub conversion")
     args = p.parse_args(argv)
 
@@ -100,7 +103,7 @@ def main(argv=None):
 
     results = {}
     for entry in entries:
-        status = run_one(entry, staging, args.mineru, args.backend, args.dry_run)
+        status = run_one(entry, staging, args.mineru, args.backend, args.model_source, args.dry_run)
         key = entry.get("zotero_key", "?")
         results[key] = status
 

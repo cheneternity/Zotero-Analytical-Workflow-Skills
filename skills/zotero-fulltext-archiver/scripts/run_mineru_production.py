@@ -18,8 +18,8 @@ zotero-fulltext-archiver/SKILL.md for a Windows CPU environment:
 Usage:
     run_mineru_production.py --pdf SOURCE.pdf --zotero-key KEY
         [--output DIR] [--mineru PATH] [--backend pipeline]
-        [--run-dir DIR] [--timeout 3600] [--no-progress-timeout 900]
-        [--dry-run]
+        [--model-source modelscope] [--run-dir DIR]
+        [--timeout 3600] [--no-progress-timeout 900] [--dry-run]
 """
 
 from __future__ import annotations
@@ -108,6 +108,8 @@ def main(argv=None):
     p.add_argument("--output", help="output directory for MinerU Markdown")
     p.add_argument("--mineru", default="mineru", help="MinerU executable (default: mineru on PATH)")
     p.add_argument("--backend", default="pipeline", help="MinerU backend (default: pipeline)")
+    p.add_argument("--model-source", default="modelscope",
+                   help="model download source: modelscope, huggingface, or local (default: modelscope)")
     p.add_argument("--run-dir", help="scoped temp run dir (default: system temp)")
     p.add_argument("--timeout", type=int, default=3600, help="hard time limit seconds (default 3600)")
     p.add_argument("--no-progress-timeout", type=int, default=900,
@@ -174,6 +176,10 @@ def main(argv=None):
             # requests are hijacked and return 503. Exempt loopback from the
             # proxy for the child process.
             env = dict(os.environ)
+            # Model source is configurable; modelscope is the China-friendly
+            # default for the pipeline models. A caller-chosen env var is
+            # preserved when --model-source is not overridden.
+            env["MINERU_MODEL_SOURCE"] = args.model_source
             no_proxy = env.get("NO_PROXY") or env.get("no_proxy") or ""
             if no_proxy:
                 no_proxy += ","
