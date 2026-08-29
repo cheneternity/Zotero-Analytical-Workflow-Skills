@@ -109,6 +109,16 @@ python skills/zotero-fulltext-archiver/scripts/run_mineru_production.py \
 - `--backend`：默认 `pipeline`
 - `--dry-run`：执行全部预检 + 桩转换，**不真正调用 MinerU**，用于无 MinerU 环境验证链路
 
+### 重要：代理与模型源
+
+MinerU CLI 会在本地启动一个临时 API 服务，并通过 `127.0.0.1` 做健康检查。如果系统设置了 HTTP 代理但未豁免 loopback，健康检查会被代理劫持并返回 503，导致转换卡在 “Timed out waiting for local mineru-api to become healthy”。
+
+本脚本已自动为子进程注入 `no_proxy=127.0.0.1,localhost,::1`，无需手动处理。但还需要：
+
+- 设置 `MINERU_MODEL_SOURCE=modelscope`（或 `huggingface`），否则可能反复走自动检测；
+- 首次运行会下载约 7GB 的 pipeline 模型（`PDF-Extract-Kit-1.0`），可先用 `modelscope` 的 `snapshot_download` 预下载；
+- 首次加载模型可能超过默认 5 分钟健康检查窗口，可调大 `MINERU_LOCAL_API_STARTUP_TIMEOUT_SECONDS`（例如 1200）。
+
 ---
 
 ## 4. mineru_batch_runner.py

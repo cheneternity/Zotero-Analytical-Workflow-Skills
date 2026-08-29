@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import os
 import shutil
 import subprocess
 import sys
@@ -168,8 +169,19 @@ def main(argv=None):
             md_candidate = stub
             rc = 0
         else:
+            # MinerU's CLI starts a local API and health-checks it over
+            # 127.0.0.1. If a system HTTP proxy is set, those localhost
+            # requests are hijacked and return 503. Exempt loopback from the
+            # proxy for the child process.
+            env = dict(os.environ)
+            no_proxy = env.get("NO_PROXY") or env.get("no_proxy") or ""
+            if no_proxy:
+                no_proxy += ","
+            no_proxy += "127.0.0.1,localhost,::1"
+            env["NO_PROXY"] = no_proxy
+            env["no_proxy"] = no_proxy
             proc = subprocess.Popen(
-                cmd, stdout=so, stderr=se, text=True,
+                cmd, stdout=so, stderr=se, text=True, env=env,
                 creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if sys.platform == "win32" else 0,
             )
             start = time.time()
