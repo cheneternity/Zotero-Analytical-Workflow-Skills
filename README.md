@@ -121,6 +121,17 @@ Zotero-analytical-writer/
 
 用于回答基于当前 ResearchVault 的文献问题。它以 Analytical Notes 为默认检索入口，以相应 Fulltext 或 Zotero PDF 做定向补充与核验，避免无边界扫描全文库。
 
+## 脚本（Scripts）
+
+skill 文件中引用了 4 个辅助脚本，原仓库未随附，本仓库已补齐（仅依赖 Python 3 标准库）：
+
+- `skills/research-vault-knowledge-maintainer/scripts/validate_research_vault_knowledge.py` — Knowledge Wiki 校验器
+- `skills/zotero-fulltext-archiver/scripts/validate_research_vault_literature_links.py` — Note ↔ Fulltext 链接校验器
+- `skills/zotero-fulltext-archiver/scripts/run_mineru_production.py` — 单篇 MinerU 生产转换
+- `skills/zotero-fulltext-archiver/scripts/mineru_batch_runner.py` — 串行批量转换
+
+各脚本的用法、参数与自检方法见 [SCRIPTS.md](SCRIPTS.md)。
+
 ## 使用建议
 
 - 如果你是把这些 skill 用于 Codex 或类似代理系统，建议保持当前目录结构不变。
