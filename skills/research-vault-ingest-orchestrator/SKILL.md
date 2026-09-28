@@ -11,15 +11,7 @@ This is the production control plane for a **specified** paper. It orchestrates 
 
 It never performs discovery, searches Zotero for interesting papers, or downloads new papers unless the user explicitly requests that work. It never restarts an already complete pipeline merely because a new ingest request arrived.
 
-Current production layout:
-
-- Knowledge Wiki: `D:\ResearchVault\01knowledge`
-- Analytical Notes: `D:\ResearchVault\02vault`
-- Formal Fulltext: `D:\ResearchVault\03fulltext`
-- Knowledge machine metadata: `D:\ResearchVault\01knowledge\.meta`
-- Knowledge page templates: `D:\ResearchVault\模板\知识库模板`
-- MinerU production runner: `D:\ResearchVault\tools\run_mineru_production.py`
-- Canonical Analytical Note template: `D:\ResearchVault\模板\论文精读模板.md`
+Resolve `vault_root` from the user's explicit project/Vault location or the current agent workspace that contains it. Discover the existing Note, Fulltext, Knowledge, metadata, index and template locations from that Vault; conventional relative folders include `02vault/`, `03fulltext/`, `01knowledge/` and `01knowledge/.meta/`, but do not require those names when the project uses another layout. Templates bundled with the relevant skills are fallbacks when the Vault has no accessible template. Detect conversion and validation tools from the current agent's actual capabilities; no personal runner or absolute path is required.
 
 The stable identity is `zotero_key` (parent item); `pdf_key` identifies its PDF attachment. A title is display-only and may be used for human sanity checks, never as the primary key.
 
@@ -63,7 +55,7 @@ Use exactly one mode for each request:
 - `NORMAL_INGEST` is the default for a normal request to add a specified Zotero paper. Run state inspection, Zotero identity, only the necessary Fulltext and Analytical Note stages, the Knowledge decision, any necessary Knowledge update, standard validation, and append-only logging. Do not run the acceptance suite (hard retrieval tests, cross-topic retrieval, autonomous theme testing, or an extended audit report) unless the user explicitly asks for it.
 - `ACCEPTANCE_TEST` is selected only when the user explicitly requests a Skill test, new-topic autonomous creation test, retrieval test, or system acceptance. Run the requested ingest path plus hard retrieval tests, cross-topic tests, and the extended audit required by the acceptance scope.
 
-`NORMAL_INGEST` must retain standard safety validation: identity, Note/Fulltext pairing, Knowledge links, claim sidecars, statement-drift checks, and the Knowledge validator exit code. The mode split removes repeated acceptance-test overhead; it never disables safety checks or lowers a Knowledge page-creation gate.
+`NORMAL_INGEST` must retain standard safety validation: identity, Note/Fulltext pairing, Knowledge links, claim sidecars, and statement-drift checks. Run the Knowledge validator when the current project provides one; otherwise complete the documented manual checks and report that automated validation was unavailable. The mode split removes repeated acceptance-test overhead; it never disables applicable checks or lowers a Knowledge page-creation gate.
 
 ## Minimal-action decision table
 
@@ -81,11 +73,11 @@ Use exactly one mode for each request:
 ## Production rules
 
 - The Zotero fetcher must resolve `zotero_key` and `pdf_key`; do not use fuzzy title-based disk searches as acquisition.
-- For a needed new MinerU conversion, use the verified runner and the Fulltext Archiver instructions: an ASCII `input_<zotero_key>.pdf` working copy, matching source/working SHA-256, explicit `pipeline` backend in the current Windows CPU environment, one paper at a time, timestamped stdout/stderr, and scoped process cleanup. This documents `CURRENT_ENVIRONMENT_PIPELINE_PREFERRED`; it does not declare hybrid permanently unsupported.
+- For a needed new conversion, use only a PDF-to-Markdown capability actually available and supported in the current environment, following the Fulltext Archiver's source-integrity and one-paper-at-a-time safeguards. Do not assume a runner, backend, operating system, temporary-directory convention, or processor. If no conversion capability is available, retain the accurate deferred state and explain what input/tool is needed.
 - Formal Fulltext is `03fulltext/<collection>/<zotero_key>.md`, with resolved image links and `MISSING_IMAGES = 0`. Preserve extracted body text; do not translate, summarize, polish, or Knowledge-ify it.
-- Analytical Note writing belongs solely to `zotero-analytical-writer` and represents single-paper structured understanding. For every new or explicitly normalized Note, use `D:\ResearchVault\模板\论文精读模板.md` as the structural authority; do not create a duplicate Note merely because an existing Note needs template repair.
+- Analytical Note writing belongs solely to `zotero-analytical-writer` and represents single-paper structured understanding. For every new or explicitly normalized Note, use the active Vault's template or the bundled fallback as the structural authority; do not create a duplicate Note merely because an existing Note needs template repair.
 - When the user requires the template strictly, audit the existing Note before declaring `ALREADY_COMPLETE`. Preserve confirmed metadata, identity, links, formulas, and evidence, but reshape headings and conclusion blocks to the canonical template. Each conclusion must pair a finding with a source quotation; add PDF page numbers only after direct PDF verification or a reliable page mapping.
-- Knowledge writing belongs solely to `research-vault-knowledge-maintainer`. Before every Knowledge write, read `D:\ResearchVault\模板\知识库模板\README_知识库模板说明.md` and the matching `主题模板.md`, `概念模板.md`, `方法模板.md`, `关系模板.md`, or `争议模板.md`. Preserve the template's visible section order, tables, boundary sections, gaps, implications, and source tracking; do not substitute a short summary/source-list page. It must retain the frozen schema, Chinese-first human layer, claim sidecars, gap sidecars, and page-creation gate. Update an existing canonical page before considering a new page.
+- Knowledge writing belongs solely to `research-vault-knowledge-maintainer`. Before every Knowledge write, read the active Vault's template README and matching page template when available; otherwise use the matching template bundled with that skill. Preserve the template's visible section order, tables, boundary sections, gaps, implications, and source tracking; do not substitute a short summary/source-list page. It must retain the frozen schema, Chinese-first human layer, claim sidecars, gap sidecars, and page-creation gate. Update an existing canonical page before considering a new page.
 - When the user asks for a folder, collection, research direction, or all papers, the Knowledge gate must build a coverage ledger and route every in-scope paper to at least one real-path `source_notes` list and template evidence/source section. Report total papers, Fulltext-available papers, Note-only papers, and unresolved coverage before declaring success.
 - Workflow states are not Knowledge evidence enums and must never be inserted into frozen Knowledge schema fields.
 - The visible Knowledge log remains human-readable. Keep raw `zotero_key`/`pdf_key` in the orchestrator run record or linked Note/Fulltext identity chain, not in visible Knowledge prose or the human-facing log.

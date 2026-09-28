@@ -1,19 +1,15 @@
 ---
 name: research-vault-knowledge-maintainer
-description: "Maintain the persistent Research Knowledge Wiki in D:\\ResearchVault\\knowledge from existing analytical literature notes. Use when creating or incrementally updating cross-paper themes, concepts, methods, relationships, controversies, syntheses, the knowledge index or append-only log; or when linting traceability, duplicates, conflicts, and stale claims. Preserve note-first retrieval and use linked MinerU fulltexts only for targeted verification of precise claims."
+description: "Maintain a persistent research knowledge layer from existing analytical literature notes in the user's active Vault. Use when creating or incrementally updating cross-paper themes, concepts, methods, relationships, controversies, syntheses, indexes or logs; or when checking traceability, duplicates, conflicts and stale claims. Preserve note-first retrieval and use linked fulltexts only for targeted verification."
 ---
 
 # Research Vault Knowledge Maintainer
 
 Maintain a small, evidence-traceable Markdown knowledge layer. Treat it as navigation and persistent synthesis, never as primary evidence.
 
-## Current Vault Layout
+## Workspace resolution
 
-- Knowledge Wiki: `D:\ResearchVault\01knowledge`
-- Analytical Notes: `D:\ResearchVault\02vault`
-- MinerU Fulltext: `D:\ResearchVault\03fulltext`
-
-These paths take precedence over legacy folder names appearing in historical notes or examples.
+Resolve `vault_root` from the user's explicit directory or the current agent workspace that contains the target Vault. Discover the actual Knowledge, Analytical Note and Fulltext locations from existing files and links; common relative locations include `01knowledge/`, `02vault/` and `03fulltext/`, but preserve the Vault's real layout when it differs. Do not assume an operating system, absolute path, or personal directory. All paths in new metadata and links must be valid relative to the active Vault.
 
 ## Guardrails
 
@@ -22,7 +18,7 @@ These paths take precedence over legacy folder names appearing in historical not
 - Resolve every scientific claim to one or more `zotero_key` values and Analytical Notes. For exact wording, definitions, model details, coefficients, formulas, or mechanisms, follow the note's `fulltext_path` and make a targeted search there.
 - Treat a Knowledge Page as a derived artifact. It may link to pages for navigation, but never use a Knowledge Page as evidence for another scientific claim.
 - On incremental ingestion, re-evaluate the prior synthesis against the new Analytical Note; do not treat prior knowledge text as supporting evidence.
-- A same-path Analytical Note template repair is a presentation/traceability maintenance action, not by itself a new scientific contribution. Re-check source-note resolution and validator coverage, but do not create or revise a Knowledge Page solely because the Note was normalized to `D:\ResearchVault\模板\论文精读模板.md`.
+- A same-path Analytical Note template repair is a presentation/traceability maintenance action, not by itself a new scientific contribution. Re-check source-note resolution and available validation, but do not create or revise a Knowledge Page solely because the Note was normalized to its active template.
 - Prefer updating an existing canonical page over creating a synonym. Use `aliases` for Chinese/English names and common variants.
 - Preserve disagreement. Use `agreement: mixed`, `conflicting`, or `insufficient` where the current Vault evidence does not support a single conclusion. Label explanations not stated by papers as `interpretation`.
 - Create a page only for a durable theme, recurrent method, shared relationship, real controversy, or clearly important emerging concept. Do not create one-node-per-term pages.
@@ -45,15 +41,15 @@ by validation or template-compliance checks.
 
 ## Knowledge Template Rule
 
-All user-facing Knowledge Pages must follow the current template stored at `D:\ResearchVault\模板\知识库模板`. Before creating or structurally refreshing Knowledge Pages, read and follow the current template. Do not invent an alternative visible page structure when a valid workspace template exists.
+All user-facing Knowledge Pages must follow the active Vault's current Knowledge template when one exists. Otherwise use the matching template bundled with this skill under `references/`. Before creating or structurally refreshing pages, read the selected template. Do not invent an alternative visible page structure when a valid template is available.
 
 If a template change is only presentational, update the human-readable layer while preserving the frozen schema. If it would change the semantic schema, report `SCHEMA_REVIEW_REQUIRED` rather than changing fields, enums, IDs, or metadata locations automatically.
 
 ### Strict local template contract
 
-The actual template authority is the directory `D:\ResearchVault\模板\知识库模板`, not a remembered outline or a simplified evidence-list pattern. Before every Knowledge Page creation or material rewrite, read:
+The template authority is the active Vault's accessible template, or the bundled fallback under `references/` when the Vault has none. Before every Knowledge Page creation or material rewrite, read:
 
-1. `README_知识库模板说明.md`;
+1. the Vault's template README when available, otherwise the schema and matching bundled template;
 2. the matching page template: `主题模板.md`, `概念模板.md`, `方法模板.md`, `关系模板.md`, or `争议模板.md`;
 3. the current page and its canonical aliases in `01knowledge/index.md`.
 
@@ -84,7 +80,7 @@ Do not declare the Knowledge update complete until all of the following are true
 - conditions, heterogeneity, limitations, and research gaps are explicit;
 - all in-scope papers are covered by real Analytical Note links;
 - Fulltext-backed claims have been targeted back to `fulltext_path` and no unverified quote/page number is present;
-- the Knowledge validator exits 0 and the coverage ledger has no unexplained missing paper.
+- all applicable checks pass; if a project validator is available, require exit code 0, otherwise complete the documented manual checks and clearly report that automated validation was unavailable. A missing validator must never be represented as a pass.
 
 ## Chinese-first Knowledge Writing Rule
 
@@ -93,13 +89,13 @@ All user-facing Knowledge titles, headings, synthesis, evidence descriptions, ga
 ## Workflow
 
 1. Read `02vault/_index/`, then candidate Analytical Notes. Build a coverage ledger recording title, `zotero_key`, note path, Fulltext availability, variables, methods, findings, limitations, and the page(s) to which each paper will be routed.
-2. Read `D:\ResearchVault\模板\知识库模板\README_知识库模板说明.md` and the matching page template before drafting. Read `01knowledge/index.md` and find canonical pages by title and aliases. Decide explicitly which pages to update, create, or leave unchanged.
+2. Read the active Vault's template README and matching page template when present; otherwise read the matching bundled reference template. Read the discovered Knowledge index and find canonical pages by title and aliases. Decide explicitly which pages to update, create, or leave unchanged.
 3. For each precise claim, inspect the structured Note first and then search the linked Fulltext or PDF for the exact result and its qualifiers. Record the verification state; do not treat a Note-only summary as Fulltext evidence.
 4. Update evidence lists and cross-links. Keep `evidence_count` equal to the distinct Analytical Notes in `source_notes`; add a real-path source link for every supporting paper. It is a page-coverage count, never a claim-support count.
 5. Use the six page classes only: `knowledge-theme`, `knowledge-concept`, `knowledge-method`, `knowledge-relation`, `knowledge-controversy`, and `knowledge-synthesis`. A relation page must set `subject`, `relation`, `object`, and `agreement`.
 6. For each precise claim, record `fulltext_verified` only after targeted verification through the linked Fulltext. Otherwise use `note_supported`; use `interpretation` for a clearly labelled cross-paper inference. Page-level `evidence_status` remains a summary and may be `mixed`; never recreate English quotations from Chinese notes.
 7. Refresh the knowledge-oriented `01knowledge/index.md`, append (never rewrite) an entry in `01knowledge/log.md`, and record created/updated/unchanged pages, coverage counts, Fulltext counts, and unresolved items.
-8. Run the Knowledge validator and a template/coverage audit. Fix only conservative structural issues; never delete a knowledge page automatically.
+8. Run the available Knowledge validator, if the current workspace provides one, and complete a template/coverage audit. If no validator is available, report that limitation after the manual audit. Fix only conservative structural issues; never delete a knowledge page automatically.
 
 The lint reports page classes, orphan pages, missing evidence, broken note links, invalid Zotero keys, evidence-count mismatches, duplicate titles, alias conflicts, invalid relations, note-only versus Fulltext-verified states, possible relationship contradictions, and stale pages.
 

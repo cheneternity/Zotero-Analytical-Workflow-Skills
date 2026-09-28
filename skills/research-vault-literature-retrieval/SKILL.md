@@ -1,6 +1,6 @@
 ---
 name: research-vault-literature-retrieval
-description: "ResearchVault 文献知识问题的默认检索技能。先从 02vault/_index 和 D:\\ResearchVault\\02vault 的 Analytical Notes 定位相关论文，再按需要定向进入对应 D:\\ResearchVault\\03fulltext MinerU Markdown，必要时回到 Zotero PDF 验证。若用户消息以‘基于当前 ResearchVault 项目文件检索’（或明确要求基于当前 ResearchVault 项目文件作答）开头，必须优先执行严格的项目文件检索后再回答。纯 Skill/Python/Git/文件整理/MinerU 调试等操作任务不自动触发文献检索。"
+description: "ResearchVault 文献知识问题的默认检索技能。先从当前 Vault 的 Analytical Notes 定位相关论文，再按需要定向进入对应 Fulltext，必要时回到 Zotero PDF 验证。若用户明确要求基于当前项目文件检索，优先执行严格的项目文件检索后再回答。纯 Skill、代码、Git、文件整理和转换工具调试任务不自动触发文献检索。"
 ---
 
 # Research Vault Literature Retrieval
@@ -16,11 +16,11 @@ Analytical Notes 负责定位和理解论文；MinerU Fulltext 负责补充、�
 
 不要把论文库和全文库作为两个平级数据库并行搜索，也不要把 Fulltext 当作默认论文发现层。
 
-## 目录与身份规则
+## 工作区与身份规则
 
-- D:\ResearchVault\02vault 是 PRIMARY RETRIEVAL LAYER 和 SEMANTIC RETRIEVAL LAYER。
-- D:\ResearchVault\03fulltext 是 SUPPLEMENTARY ORIGINAL-TEXT LAYER 和 SOURCE DETAIL LAYER。
-- 两个目录必须物理分离；不得把 Fulltext 放入 02vault，也不得把 Analytical Note 放入 03fulltext。
+- 使用用户明确指定的 Vault；否则使用当前 agent 已打开且确认包含该 Vault 的工作区。将其作为本轮 `vault_root`，从实际文件与链接中发现 Analytical Note、Fulltext、Knowledge 和索引目录。
+- 若当前 Vault 使用常见结构，`02vault/` 是主要检索层，`03fulltext/` 是原文补充层；如果目录名称不同，遵循真实布局，不要求迁移或重命名。
+- Note 与 Fulltext 应保持逻辑分层。依赖目录名区分时，先确认实际结构；不得仅凭文件名认定其类型。
 - 两层属于同一篇论文时，统一使用 zotero_key。
 - Note → Fulltext 优先通过 fulltext_path，其次通过 zotero_key，最后才允许唯一的 title fallback。
 - Fulltext → Note 通过 note_path，并同时核对 zotero_key 和 pdf_key。
@@ -82,7 +82,7 @@ Analytical Notes 负责定位和理解论文；MinerU Fulltext 负责补充、�
 
 ## Knowledge-aware routing
 
-Keep NOTE-FIRST RETRIEVAL. Knowledge (`D:\ResearchVault\01knowledge`) is an optional derived-synthesis routing layer for concepts, methods, relationships, controversies, and research-direction/gap questions. It never replaces the Analytical Note or original-text evidence chain.
+Keep NOTE-FIRST RETRIEVAL. The active Vault's Knowledge area is an optional derived-synthesis routing layer for concepts, methods, relationships, controversies, and research-direction/gap questions. It never replaces the Analytical Note or original-text evidence chain.
 
 Classify each question with [references/retrieval-routing.md](references/retrieval-routing.md) before retrieval. For paper-specific and exact-source questions, begin directly with the Analytical Note. For broad synthesis, start from Knowledge only to identify the relevant claims/pages, then return to their supporting Notes; use targeted Fulltext only for the precise point that needs verification.
 
@@ -96,7 +96,7 @@ Knowledge-assisted routing does not authorize a default fulltext-wide scan, raw-
 
 ### STEP 2 — Analytical-note Index
 
-按以下顺序读取 `D:\ResearchVault\02vault\_index\` 中存在的页面，缺失则跳过：
+按以下顺序读取当前 Analytical Note 目录下 `_index/` 中存在的页面，缺失则跳过：
 
 1. 文献索引.md
 2. 研究主题索引.md
@@ -107,9 +107,9 @@ Knowledge-assisted routing does not authorize a default fulltext-wide scan, raw-
 
 ### STEP 3 — Analytical Note Retrieval
 
-正常文献发现只能先搜索 D:\ResearchVault\02vault。搜索 title、theme、methodology、core_variable、key_finding、relevance、中文正文、英文术语、作者和 keywords。
+正常文献发现先搜索本轮已解析的 Analytical Note 目录。搜索 title、theme、methodology、core_variable、key_finding、relevance、中文正文、英文术语、作者和 keywords。
 
-绝不能以 D:\ResearchVault\03fulltext 作为正常检索第一步。
+绝不能以 Fulltext 目录作为正常检索第一步。
 
 ### STEP 4 — Read Candidate Notes
 
@@ -167,11 +167,11 @@ Use MinerU Fulltext to supplement, verify, refine, trace, and quote Analytical N
 
 默认只对已定位论文做 targeted search，例如：
 
-D:\ResearchVault\03fulltext\能耗\TTD9LZ5H.md
+<fulltext_dir>/<collection>/<zotero_key>.md
 
 根据 Note 中的 building height、building volume、building lifespan、random forest、SHAP 或对应英文原句搜索。
 
-禁止默认执行 D:\ResearchVault\03fulltext 的全库扫描。仅以下情况允许例外：
+禁止默认扫描整个 Fulltext 目录。仅以下情况允许例外：
 
 1. 用户明确要求直接在全文中搜索某术语；
 2. 用户要求找正文中出现某个确切词组的论文；

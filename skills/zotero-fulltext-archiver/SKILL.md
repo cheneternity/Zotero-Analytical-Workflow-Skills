@@ -1,116 +1,72 @@
 ---
 name: zotero-fulltext-archiver
-description: "将已有 Zotero PDF 或历史 MinerU 输出归档为可追踪的 ResearchVault Fulltext Markdown：先复用已成功的 MinerU 链路，再写入统一 frontmatter、整理安全图片路径、保留页面映射并执行只读校验。此技能不做中文总结、不改写论文正文、不负责用户检索。"
+description: "将当前环境可访问的 Zotero PDF 或已提供的转换结果归档为可追踪的 Fulltext Markdown，保留原文、图片、稳定身份和 Note 关联。此技能不做中文总结、不改写论文正文、不负责用户检索。"
 ---
 
 # Zotero Fulltext Archiver
 
-## Batch 6D production safeguards (Windows CPU / MinerU 3.x)
-
-When a validated Zotero PDF must be run through MinerU on the current Windows
-CPU environment, use an ASCII-only *working copy* in a scoped temporary run
-directory. The Zotero attachment remains read-only. Record the source and
-working-copy SHA-256 values and do not invoke MinerU until they match.
-
-Use the explicitly validated `pipeline` backend for this environment. This is
-an environment-specific fallback, not a general claim that the hybrid backend
-is unsuitable. Give a complete article a hard limit of at least 60 minutes.
-A no-progress stop may be used only after 10--15 minutes during which stdout,
-stderr, output files, and process CPU time have all remained inactive. Abort
-for persistently available RAM below 2 GB only after a sustained observation,
-and record the resource samples.
-
-Every invocation must stream timestamped stdout and stderr to the run
-directory, record stage transitions, and clean only the MinerU CLI tree and
-new `mineru.cli.fast_api` descendants created by that invocation. Recheck for
-those exact processes after cleanup; never terminate unrelated Python work.
-
-Archive only after the raw Markdown gate passes: non-empty full-document
-front/middle/end samples, source identity, image-file/reference checks, and
-no missing image targets. Formal archiving may add schema frontmatter and
-rewrite image paths, but must otherwise preserve the extracted body verbatim.
-
-Before invoking MinerU, inspect the formal `03fulltext` path by `zotero_key`.
-If a formal Fulltext already has matching `zotero_key`/`pdf_key`, valid
-frontmatter, resolved images, and a non-empty article body, reuse it and run
-targeted validation. A Note-template repair is not a reason to rerun MinerU.
-If `page_mapping` is `unknown`, retain that value; the Analytical Writer may
-still verify quotation pages directly against the read-only Original PDF.
-
 ## 职责边界
 
-执行：`Zotero PDF → MinerU → Fulltext Markdown → 图片整理 → metadata → Note 关联 → validation`。
+执行：`可访问的 Zotero PDF → 可用的 PDF 文本转换 → Fulltext Markdown → 图片整理 → metadata → Note 关联 → 校验`。
 
-不执行中文翻译、分析笔记写作、批量检索或 Zotero 数据库改写。
+不执行中文翻译、分析笔记写作、批量文献发现或 Zotero 数据库改写。
 
-## 1. 先确认实际 MinerU 环境
+## 1. 解析当前环境
 
-不要重新安装 MinerU。先搜索 `D:\ResearchVault`、`D:\research` 和相关项目中的 `MinerU`、`mineru`、`magic-pdf`、批处理脚本、配置和历史输出。
+1. 从用户指定的 Vault 或当前 agent 工作区确认 `vault_root`；从其中发现现有 Fulltext 目录、Note 目录和相关索引。常见的相对结构是 `03fulltext/<collection>/`、`02vault/<collection>/`，但必须保留项目实际采用的结构。
+2. 先按 `zotero_key` 检查是否已有正式 Fulltext。若其 `zotero_key`、`pdf_key`、frontmatter、正文和图片链接均有效，则复用并执行定向校验；修整 Note 模板不是重新转换全文的理由。
+3. 检查当前 agent 实际可用的 Zotero 附件访问和 PDF 转换能力。优先复用用户提供的合格转换结果；需要转换时，只使用当前环境确实可调用的兼容工具。不要假设 MinerU、特定版本、runner、命令、后端、操作系统或个人历史目录已安装/存在，也不要为满足本技能安装软件或个人代码。
+4. 若 PDF 或转换工具不可访问，返回 `FULLTEXT_DEFERRED` 并说明缺少的文件或能力。不得以空壳、摘要或模型生成正文冒充 Formal Fulltext。
 
-当前已发现的可复用调用链是：
+## 2. 转换与来源完整性
 
-`D:\research\mineru_batch_runner.py` → `D:\MinerU\.venv\Scripts\mineru.exe` → 系统临时输出目录 → `D:\ResearchVault_Archive\mineru-staging\`。批量输出只能作为外部暂存；逐篇补齐 frontmatter、图片路径和 Note 关联并验证后，才复制到 `D:\ResearchVault\03fulltext\<collection>\`。
+- 原始 Zotero PDF 只读。若转换器需要可写输入，先在当前运行环境提供的临时目录中建立工作副本；不要改动原附件。
+- 当当前环境能计算校验和时，记录原 PDF 与工作副本的 SHA-256，并在转换前确认一致；若无法计算，记录该项未执行，不要声称已核对。
+- 一次只处理当前请求范围内的论文。保留当前转换器可提供的诊断信息；只清理能够确认由本次调用启动的进程和临时文件。
+- 对转换结果检查正文前、中、后是否存在，来源身份是否匹配，图片目标是否存在。任何缺页、截断、乱码或图片缺失都应如实记录并阻止标记为完成。
+- 除 frontmatter、可验证的机器定位标记和必要的安全图片路径修复外，保持抽取正文原样；不翻译、总结、润色、重写或插入模型生成内容。
 
-历史 `MinerU_test` 的页码辅助文件已归档到 `D:\ResearchVault_Archive\2026-08-10\MinerU_test\`；如需核验历史页码映射可定向读取，但不足以证明所有论文都可可靠映射。
+## 3. 正式归档位置与图片
 
-## 2. 归档路径
+Fulltext 使用当前 Vault 已有的目录和命名规则；若项目尚未建立规则，采用相对 `vault_root` 的 `03fulltext/<collection>/<zotero_key>.md`，图片放在同目录下 `images/<zotero_key>/`。所有写入路径必须先确认位于活动 Vault 中。
 
-正式全文：
-
-```text
-D:\ResearchVault\03fulltext\<collection>\<zotero_key>.md
-D:\ResearchVault\03fulltext\<collection>\images\<zotero_key>\<image-file>
-```
-
-旧的 `MinerU_batch` 已归档到 `D:\ResearchVault_Archive\2026-08-10\MinerU_batch\`，不作为运行时输入或正式全文检索目录。当前 Vault 的分析笔记仍位于 `论文库/` 时，不移动它们；仅在全文 frontmatter 中写准确的 `note_path`。
-
-## 3. 优先迁移旧结果
-
-若 `MinerU_batch` 已有与 `zotero_key` 唯一对应的 Markdown 和图片：
-
-1. 确认 Zotero 主键、PDF 键、标题和 Collection。
-2. 将旧 Markdown 复制到正式 `03fulltext/<collection>/<zotero_key>.md`；分析笔记中的 Obsidian 链接仍使用 `fulltext/<collection>/<zotero_key>`。
-3. 将图片复制到 `images/<zotero_key>/`，不得使用完整论文标题作为目录名。
-4. 将原有图片引用改为相对于 Fulltext Markdown 的安全路径，例如 `![](<images/Q22PFLNV/image.jpg>)`。
-5. 逐一检查每个本地图片引用真实存在；有缺失时不能报告成功。
-
-若没有可复用结果，才调用已确认的 MinerU 可执行文件处理单篇 PDF；不得批量重跑整个库。
+- Vault 内链接使用相对路径和 `/` 分隔符，不写机器绝对路径。
+- 图片引用应相对于 Fulltext Markdown，且不得跳出其图片目录或活动 Vault。
+- 只有确认每个图片文件真实存在且引用可解析时，才报告 `images_valid: true`。
+- 已有可复用 Markdown/图片仅在用户提供或当前 Vault 可访问且身份唯一时迁移；不假定存在某个历史暂存目录。
 
 ## 4. Fulltext Frontmatter
 
-每个正式全文顶部至少包含：
+每个正式全文至少保留以下可确认字段；按当前 Vault 既有 schema 增补其他必要字段。路径均为 Vault-relative：
 
 ```yaml
 ---
 type: literature-fulltext
 title: "..."
-zotero_key: "Q22PFLNV"
-pdf_key: "4RMSR7ZR"
+zotero_key: "..."
+pdf_key: "..."
 doi: "..."
-collection: "创新经济地理"
-note_path: "论文库/创新经济地理/论文标题.md"
-fulltext_path: "03fulltext/创新经济地理/Q22PFLNV.md"
-zotero_item: "zotero://select/library/items/Q22PFLNV"
-zotero_pdf: "zotero://open-pdf/library/items/4RMSR7ZR"
-source_type: mineru
+collection: "..."
+note_path: "<relative path to analytical note>"
+fulltext_path: "<relative path to this file>"
+zotero_item: "zotero://select/library/items/<zotero_key>"
+zotero_pdf: "zotero://open-pdf/library/items/<pdf_key>"
+source_type: "<actual source or converter>"
 page_mapping: unknown
 ---
 ```
 
-Vault 内部路径统一使用 `/`。缺失的 DOI 可留空，但不得伪造。
+缺失 DOI 可留空。不要猜 DOI、collection、Key 或页码。若 Zotero URI 目标信息不足，不要生成不完整 URI。
 
 ## 5. 原文与页码规则
 
-- MinerU Markdown 是证据档案：不翻译、总结、润色、重写、删减或插入模型生成内容。
-- 允许的后处理仅包括 frontmatter、机器定位标记和安全图片路径修复。
-- 只有当 `content_list.json`/`middle.json` 等信息与真实 PDF 通过单篇测试可靠对应时，才写 `page_mapping: reliable` 或 `<!-- pdf_page: N -->`。
-- 0-based/1-based 转换必须记录并用真实 PDF 验证；无法可靠映射时写 `page_mapping: unknown`，不要猜 page。
+- 页码映射只有在转换器提供的数据与实际 PDF 经核验可靠对应时，才标记为可靠或插入页码标记。
+- 记录转换器使用的页码基准和验证方法；无法验证时保留 `page_mapping: unknown`，不得推算页码。
+- `page_mapping: unknown` 不阻止分析写作者直接访问 PDF 做页面核验；它只禁止从 Markdown 推断页码。
 
-## 6. 关联与校验
+## 6. 关联与完成状态
 
-归档完成后：
-
-1. 分析笔记补 `fulltext_path`，并可增加 `[[fulltext/<collection>/<zotero_key>]]` 入口；不因全文归档重写整篇笔记，模板化重排由 `zotero-analytical-writer` 单独负责。
-2. Fulltext 补 `note_path`，确认双方 `zotero_key`、`pdf_key` 一致。
-3. 运行 `D:\research\zotero_batch\validate_research_vault_literature_links.py`，只报告，不自动删除。
-4. 只有 PDF、Fulltext、图片、Note、链接均有效时，才向 Collection Manager 报告 COMPLETE。
+1. Fulltext 的 `note_path` 与 Note 的 `fulltext_path` 必须指向活动 Vault 内真实存在的目标。
+2. 两侧 `zotero_key`、`pdf_key` 应一致；图片引用和正文完整性应通过检查。
+3. 如果当前项目提供验证工具，可运行相关检查并报告实际结果。没有项目验证器时，执行文件存在性、frontmatter、双向路径、身份字段、正文和图片的人工/可用工具检查，并明确说明自动校验未运行；未做的检查不能记为通过。
+4. 只有附件访问、Fulltext 正文、必要图片、身份和链接检查均通过时，才向 Collection Manager 报告 `COMPLETE`；否则给出准确的可重试部分状态。
