@@ -19,7 +19,7 @@ Analytical Notes 负责定位和理解论文；MinerU Fulltext 负责补充、�
 ## 工作区与身份规则
 
 - 使用用户明确指定的 Vault；否则使用当前 agent 已打开且确认包含该 Vault 的工作区。将其作为本轮 `vault_root`，从实际文件与链接中发现 Analytical Note、Fulltext、Knowledge 和索引目录。
-- 若当前 Vault 使用常见结构，`02vault/` 是主要检索层，`03fulltext/` 是原文补充层；如果目录名称不同，遵循真实布局，不要求迁移或重命名。
+- 新建与默认检索路径固定为 `02vault/`（Analytical Notes）、`03fulltext/`（Fulltext）和 `01knowledge/`。迁移期间可按现有链接读取 `note/`、`论文库/`、`fulltext/`、`knowledge/` 等 legacy 内容；不要将新内容写入 legacy 目录。
 - Note 与 Fulltext 应保持逻辑分层。依赖目录名区分时，先确认实际结构；不得仅凭文件名认定其类型。
 - 两层属于同一篇论文时，统一使用 zotero_key。
 - Note → Fulltext 优先通过 fulltext_path，其次通过 zotero_key，最后才允许唯一的 title fallback。
@@ -167,7 +167,7 @@ Use MinerU Fulltext to supplement, verify, refine, trace, and quote Analytical N
 
 默认只对已定位论文做 targeted search，例如：
 
-<fulltext_dir>/<collection>/<zotero_key>.md
+03fulltext/<collection>/<zotero_key>.md
 
 根据 Note 中的 building height、building volume、building lifespan、random forest、SHAP 或对应英文原句搜索。
 
@@ -209,15 +209,15 @@ type: literature-fulltext 不得作为普通文献记录出现。物理隔离不
 
 ## 五个逻辑测试
 
-1. “有哪些论文研究建筑高度与环境绩效？”  
-   Root Index → 论文库 → Analytical Notes → 返回相关论文，不扫描 fulltext。
-2. “A、B、C 三篇如何定义 building height？”  
+1. “有哪些论文研究建筑高度与环境绩效？”
+   `02vault/_index/` → `02vault/` Analytical Notes → 返回相关论文，不扫描 `03fulltext/`。
+2. “A、B、C 三篇如何定义 building height？”
    Notes → 确认 A/B/C → 分别 resolve Fulltext → 只搜索三篇全文 → 比较定义。
-3. “第二篇作者关于结论的原话？”  
+3. “第二篇作者关于结论的原话？”
    第二篇 Note → fulltext_path → Fulltext → exact quote → context。
-4. “这句话在 PDF 第几页？”  
+4. “这句话在 PDF 第几页？”
    Note → Fulltext → page mapping 或 PDF Verify；不可靠时返回 unknown。
-5. “根据整个论文库梳理研究方向？”  
+5. “根据整个论文库梳理研究方向？”
    大量 Analytical Notes → 研究框架 → 关键论文 → 选择性 Fulltext 核验，不读取几十篇全文。
 
 最终原则：
@@ -233,8 +233,8 @@ VERIFY THE SOURCE.
 以下问题必须按 paper-level candidate pool 处理：文献综述、已有研究发现、共识与争议、指标方向比较、方法比较、研究缺口、直接/间接/中介效应。
 
 1. **Topic discovery**：Knowledge Notes 只负责导航同义词、指标、方法和候选研究；正式候选必须回到 `scope=papers` 的 Analytical Note 结果。
-2. **Candidate collection**：为每个语义主题维护候选池，并跨所有 query 合并。优先使用 Gateway 返回的 `paper_id`，必要时依次使用 Zotero Key、DOI、唯一规范化标题。Analytical Note、Fulltext 和 Knowledge Note 的文件命中不得直接当作论文数；同一论文多次命中只能计 1 篇。
+2. **Candidate collection**：为每个语义主题维护候选池，并跨所有 query 合并。优先使用 Gateway 返回的 `paper_id`，必要时依次使用 `zotero_key`、DOI、唯一规范化标题作为去重身份。Analytical Note、Fulltext 和 Knowledge Note 的文件命中不得直接当作论文数；同一论文多次命中只能计 1 篇。
 3. **Per-query accounting**：每次 Search 都记录 `query`、`raw_hits`、`unique_papers_this_query`、`new_unique_papers`、`master_unique_papers`、`page`、`has_more` 和 `next_page`。Gateway 的 `total_unique_papers` 是该 query 跨页的总数，不是跨 query 的候选池总数；跨 query 的池必须由模型继续合并。
 4. **Pagination and coverage**：使用 `scope=papers` 和 `page_size=30`（旧客户端可用 `top_k=30`）。只要 `has_more=true` 且候选池未达到最低覆盖，就必须请求 `next_page`；不能把当前页、文件数或核验数当作论文数。综述候选池最低目标为 15 篇，默认目标为 20 篇，一般覆盖范围为 20–30 篇。
-5. **Allowed stopping conditions**：候选收集仅可在以下任一条件成立时停止：`master_unique_papers >= 20`（或用户明确指定的目标）；已执行多个语义不同的 query 且每个 query 的所有页面均已到尾部（`has_more=false`）；或连续 2–3 个概念不同的扩展 query 均只产生 `new_unique_papers <= 1`，且没有出现新的指标、机制、方法、尺度或结果类型。单个 zero-new query、结果重叠、已经找到几篇高相关论文或已经核验 5–7 篇，均不是停止理由。若最终少于 15 篇，必须报告 query、页面、`has_more` 和候选统计，并区分数据不足与检索覆盖不足。
+5. **Allowed stopping conditions**：综述默认目标为 20 篇，最低覆盖目标为 15 篇（除非用户指定其他数量）。候选收集仅可在以下任一条件成立时停止：`master_unique_papers >= 20`；已执行多个语义不同的 query 且每个 query 的所有页面均已到尾部（`has_more=false`）；或连续 2–3 个概念不同的扩展 query 均只产生 `new_unique_papers <= 1`，且没有出现新的指标、机制、方法、尺度或结果类型。单个 zero-new query、结果重叠、已经找到几篇高相关论文或已经核验 5–7 篇，均不是停止理由。若最终少于 15 篇，必须报告 query、页面、`has_more` 和候选统计，并区分数据不足与检索覆盖不足。
 6. **Verification and synthesis**：完成候选池和初筛后，才选择 CORE/RELEVANT 论文进入 `Analytical Note → matching Fulltext` 核验；最后再综合一致方向、冲突方向、直接效应和中介机制，并报告检索覆盖块。

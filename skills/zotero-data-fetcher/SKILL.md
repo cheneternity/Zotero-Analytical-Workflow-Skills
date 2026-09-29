@@ -11,10 +11,11 @@ description: "根据 Zotero Item Key 或标题，从当前 agent 可访问的 Zo
 
 ## 数据源发现
 
-1. 先检查当前 agent 实际可用的 Zotero connector、MCP、API 或其他集成，并优先通过它们读取条目和附件信息。
-2. 如果没有可用集成，使用用户在当前任务中提供的 Zotero 导出、条目数据、批注、全文或 PDF 文件。
-3. 只有当当前运行环境明确能访问 Zotero 本机数据时，才探索本地安装。根据当前操作系统和可访问配置动态定位数据目录；读取配置或数据库时保持只读。不得假设用户名、操作系统、Zotero 安装位置、数据目录、脚本名称或固定盘符，也不得依赖只存在于某台机器上的提取脚本。
-4. 如果以上数据源都不可用，说明缺少哪种访问能力或材料，并请求用户提供可访问的导出或附件；不得猜造路径、Key 或提取结果。
+1. 优先使用当前 agent 已连接的 Zotero integration/API；它们可提供条目、父条目、附件、集合和批注。
+2. 无 connector 时，可运行本仓库的 `python tools/zotero_readonly_fetch.py --key <parent-key>`；按平台自动发现 data directory，或传 `--data-dir` / 设置 `ZOTERO_DATA_DIR`。Windows 默认检查 `%USERPROFILE%/Zotero` 和 `%APPDATA%/Zotero/Zotero/Profiles/*/zotero`；macOS/Linux 检查 `~/Zotero`。也可从 Zotero 设置页定位 data directory。
+3. Helper 以 SQLite `mode=ro` 打开 `zotero.sqlite` 并开启 `query_only`，不会修改数据库。按父条目 key 或精确 title 查询，返回 `zotero_key`、PDF attachment `pdf_key`、title、author、year、DOI、collection、批注、可访问的 storage PDF 路径及 `.zotero-ft-cache` 路径。缓存文件只报告位置，不代替原文。
+4. PDF 只从 Zotero `storage/<pdf_key>/` attachment 路径解析。外部链接附件或不可访问文件明确返回缺失；不猜路径。如果 SQLite 被锁定或正在升级，先等待同步结束/关闭 Zotero 后重试；若仍失败，改用 Zotero 导出/API 或用户提供的附件。
+5. 不得写入 Zotero 数据库、移动或覆盖附件。若以上数据源不可用，请求用户提供可访问的导出或附件。
 
 ## 身份核对与输出
 

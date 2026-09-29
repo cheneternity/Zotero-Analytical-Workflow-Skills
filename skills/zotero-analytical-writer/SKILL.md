@@ -46,11 +46,11 @@ zotero_key: "Q22PFLNV"
 pdf_key: "4RMSR7ZR"
 doi: "..."
 collection: "创新经济地理"
-note_path: "论文库/创新经济地理/论文标题.md"
-fulltext_path: "fulltext/创新经济地理/Q22PFLNV.md"
+note_path: "02vault/创新经济地理/论文标题.md"
+fulltext_path: "03fulltext/创新经济地理/Q22PFLNV.md"
 ```
 
-Do not batch-rewrite untouched historical Notes. When updating a specified Note, normalize that same file to the template and preserve verified content and stable identity; never create a duplicate Note. Add only confirmable fields and fulltext entry points. Treat `zotero_key` as the primary key and `pdf_key` as the attachment key. Prefer `note/<collection>/` for new Notes while continuing to support the Vault's current `论文库/` paths.
+New Analytical Notes are written only to `02vault/<collection>/<paper>.md`; new Fulltext records are written only to `03fulltext/<collection>/<zotero_key>.md`. Historical `note/` and `论文库/` files may be read during migration, but are never destinations for new files. Historical `fulltext/` links may be resolved as a read fallback; normalize a path only when updating that same Note.
 
 ## 原文引用规则
 
@@ -72,5 +72,5 @@ Do not batch-rewrite untouched historical Notes. When updating a specified Note,
 ## 写入与索引
 
 1. 先判定是新建还是更新指定 Note；两种情况都先读取当前 Vault 模板或仓库随附模板。更新时允许重排正文以匹配模板，但不得改变稳定身份或制造重复 Note。
-2. 在基本信息区的链接行加入 `全文 Markdown：[[fulltext/<collection>/<zotero_key>]]`（路径存在时），并保留可验证的 Zotero 入口。
+2. 在基本信息区的链接行加入 `全文 Markdown：[[03fulltext/<collection>/<zotero_key>]]`（路径存在时），并保留可验证的 Zotero 入口。
 3. 新建论文笔记时才刷新四个根 Dataview 索引；更新既有 Note 不触发全库批量重写，但若标题、路径或索引字段变化，定向刷新受影响索引。

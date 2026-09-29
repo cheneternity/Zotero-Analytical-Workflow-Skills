@@ -23,4 +23,4 @@ When Knowledge is updated or re-evaluated, run the project's Knowledge validator
 - source mismatch, embedded machine metadata, raw key leakage and template/schema compliance;
 - evidence counts, identity resolution, duplicate/alias conflicts and relation calibration.
 
-`fulltext_verified` remains invalid unless the particular claim has the chain Note → declared `fulltext_path` → targeted Fulltext verification. A failed contract yields `VALIDATION_FAILED`, not success.
+Claim-level `fulltext_verified` remains invalid unless the particular claim has the chain Note → declared `03fulltext/...` `fulltext_path` → targeted Fulltext verification. Page-level `evidence_status` uses only `fulltext_verified`, `note_only`, or `mixed`. A failed contract yields `VALIDATION_FAILED`, not success.

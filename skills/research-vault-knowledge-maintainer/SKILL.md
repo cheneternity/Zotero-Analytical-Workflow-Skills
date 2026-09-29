@@ -9,7 +9,7 @@ Maintain a small, evidence-traceable Markdown knowledge layer. Treat it as navig
 
 ## Workspace resolution
 
-Resolve `vault_root` from the user's explicit directory or the current agent workspace that contains the target Vault. Discover the actual Knowledge, Analytical Note and Fulltext locations from existing files and links; common relative locations include `01knowledge/`, `02vault/` and `03fulltext/`, but preserve the Vault's real layout when it differs. Do not assume an operating system, absolute path, or personal directory. All paths in new metadata and links must be valid relative to the active Vault.
+Resolve `vault_root` from the user's explicit directory or the current agent workspace that contains the target Vault. Canonical new locations are `01knowledge/`, `02vault/`, and `03fulltext/`. Read legacy `knowledge/`, `note/`, `论文库/`, and `fulltext/` only when following existing files during migration; all new files and links use canonical locations. Do not assume an operating system, absolute path, or personal directory.
 
 ## Guardrails
 
@@ -26,7 +26,7 @@ Resolve `vault_root` from the user's explicit directory or the current agent wor
 
 ## Frozen schema
 
-Follow [references/knowledge-schema.md](references/knowledge-schema.md) and select the matching template in `references/` before creating or materially restructuring a Knowledge Page. The six listed page types, common frontmatter, status values, agreement values, evidence roles, verification states, gap provenances, Claim ID format, and metadata location are frozen.
+Follow [references/knowledge-schema.md](references/knowledge-schema.md) and select the matching canonical template from [the repository template directory](../../templates/知识库模板/). That is the only maintained template source. Page-level `evidence_status` is limited to `fulltext_verified`, `note_only`, or `mixed`; claim-level verification separately allows `fulltext_verified`, `note_supported`, or `interpretation`.
 
 Do not invent a page type, status, agreement, evidence role, verification state, gap provenance, or top-level machine-metadata location. If current evidence cannot be expressed by the frozen schema, preserve the evidence and report `SCHEMA_REVIEW_REQUIRED` rather than creating an ad hoc field or value.
 
@@ -41,16 +41,16 @@ by validation or template-compliance checks.
 
 ## Knowledge Template Rule
 
-All user-facing Knowledge Pages must follow the active Vault's current Knowledge template when one exists. Otherwise use the matching template bundled with this skill under `references/`. Before creating or structurally refreshing pages, read the selected template. Do not invent an alternative visible page structure when a valid template is available.
+All user-facing Knowledge Pages must follow the active Vault's current Knowledge template when one exists. Otherwise use the matching canonical template under repository `templates/知识库模板/`. Before creating or structurally refreshing pages, read the selected template. Do not invent an alternative visible page structure when a valid template is available.
 
 If a template change is only presentational, update the human-readable layer while preserving the frozen schema. If it would change the semantic schema, report `SCHEMA_REVIEW_REQUIRED` rather than changing fields, enums, IDs, or metadata locations automatically.
 
 ### Strict local template contract
 
-The template authority is the active Vault's accessible template, or the bundled fallback under `references/` when the Vault has none. Before every Knowledge Page creation or material rewrite, read:
+The template authority is the active Vault's accessible template, or the canonical repository template when the Vault has none. Before every Knowledge Page creation or material rewrite, read:
 
-1. the Vault's template README when available, otherwise the schema and matching bundled template;
-2. the matching page template: `主题模板.md`, `概念模板.md`, `方法模板.md`, `关系模板.md`, or `争议模板.md`;
+1. the Vault's template README when available, otherwise the repository template README and frozen schema;
+2. the matching page template: `主题模板.md`, `概念模板.md`, `方法模板.md`, `关系模板.md`, `争议模板.md`, or `综合模板.md`;
 3. the current page and its canonical aliases in `01knowledge/index.md`.
 
 Preserve the template's visible section order, heading levels, summary callout, evidence tables, boundary sections, research-gap sections, usage/implication sections, and source-tracking sections. Do not replace a template page with a short “summary + source list”, a paper-by-paper abstract dump, or a generic “来源与边界” stub. A page is not template-compliant merely because its frontmatter validates.

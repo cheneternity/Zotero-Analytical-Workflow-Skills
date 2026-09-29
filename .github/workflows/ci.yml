@@ -1,0 +1,24 @@
+name: portability
+
+on:
+  pull_request:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: cheneternity/Research-Vault-Literature-Retrieval
+          path: retrieval
+          ref: ${{ github.event.pull_request.head.ref }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Compile bundled Python
+        run: python -m compileall -q tools skills
+      - name: Run portability smoke tests
+        env:
+          RETRIEVAL_REPO: retrieval
+        run: python -m unittest discover -s tests -v
