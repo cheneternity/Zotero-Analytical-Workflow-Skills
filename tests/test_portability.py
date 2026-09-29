@@ -191,20 +191,24 @@ class PortabilityTests(unittest.TestCase):
 
     def test_mineru_runner_with_a_fake_backend(self):
         import run_mineru_production as runner
-        from types import SimpleNamespace
         with tempfile.TemporaryDirectory() as temp:
             base = Path(temp)
             source, mineru, output = base / "source.pdf", base / "mineru.exe", base / "run"
             source.write_bytes(b"sample PDF bytes")
             mineru.write_bytes(b"fake executable marker")
 
-            def fake_run(command, **kwargs):
+            class FakeProcess:
+                pid = 12345
+                def wait(self, timeout=None):
+                    return 0
+
+            def fake_popen(command, **kwargs):
                 raw = Path(command[command.index("-o") + 1])
                 (raw / "paper.md").write_text("converted body", encoding="utf-8")
-                return SimpleNamespace(returncode=0)
+                return FakeProcess()
 
             capture = io.StringIO()
-            with mock.patch.object(sys, "argv", ["runner", "--input", str(source), "--output", str(output), "--mineru", str(mineru)]), mock.patch.object(runner.subprocess, "run", side_effect=fake_run), contextlib.redirect_stdout(capture):
+            with mock.patch.object(sys, "argv", ["runner", "--input", str(source), "--output", str(output), "--mineru", str(mineru)]), mock.patch.object(runner.subprocess, "Popen", side_effect=fake_popen), contextlib.redirect_stdout(capture):
                 self.assertEqual(runner.main(), 0)
             self.assertEqual(source.read_bytes(), b"sample PDF bytes")
             self.assertEqual(json.loads((output / "production-status.json").read_text(encoding="utf-8"))["final_status"], "MINERU_COMPLETED_CLEAN")

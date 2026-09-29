@@ -5,10 +5,10 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import re
+import os
+import signal
 import shutil
 import subprocess
-import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -71,11 +71,20 @@ def main() -> int:
     status_path.write_text(json.dumps(status, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     timed_out = False
     with (output / "mineru.stdout.log").open("w", encoding="utf-8") as stdout, (output / "mineru.stderr.log").open("w", encoding="utf-8") as stderr:
+        process_options = {"creationflags": getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)} if os.name == "nt" else {"start_new_session": True}
+        process = subprocess.Popen(command, stdout=stdout, stderr=stderr, **process_options)
         try:
-            result = subprocess.run(command, stdout=stdout, stderr=stderr, timeout=args.timeout, check=False)
-            return_code = result.returncode
+            return_code = process.wait(timeout=args.timeout)
         except subprocess.TimeoutExpired:
             timed_out = True
+            if os.name == "nt":
+                subprocess.run(["taskkill", "/PID", str(process.pid), "/T", "/F"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+            else:
+                try:
+                    os.killpg(process.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+            process.wait()
             return_code = 124
     markdown = [p for p in raw_dir.rglob("*.md") if p.is_file() and p.stat().st_size]
     status.update({"finished_at": timestamp(), "returncode": return_code, "output_markdown_files": len(markdown), "final_status": "MINERU_TIMEOUT" if timed_out else "MINERU_COMPLETED_CLEAN" if return_code == 0 and markdown else "MINERU_FAILED"})
