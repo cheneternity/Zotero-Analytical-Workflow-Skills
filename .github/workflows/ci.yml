@@ -1,6 +1,8 @@
 name: portability
 
 on:
+  push:
+    branches: [main, fix/portable-public-release]
   pull_request:
 
 jobs:
@@ -12,7 +14,7 @@ jobs:
         with:
           repository: cheneternity/Research-Vault-Literature-Retrieval
           path: retrieval
-          ref: ${{ github.event.pull_request.head.ref }}
+          ref: ${{ github.event.pull_request.head.ref || github.ref_name }}
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
