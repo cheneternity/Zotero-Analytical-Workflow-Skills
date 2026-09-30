@@ -1,13 +1,13 @@
 ---
 name: zotero-analytical-writer
-description: "使用 Zotero metadata、批注和 MinerU Fulltext，严格按 D:\\ResearchVault\\模板\\论文精读模板.md 创建或更新 ResearchVault 中文精读笔记，并确保 Zotero 链接、公式与原文引用真实可追溯。"
+description: "使用 Zotero metadata、批注和可访问的全文证据，按当前 Vault 模板创建或更新中文精读笔记，并确保 Zotero 链接、公式与原文引用真实可追溯。"
 ---
 
 # Zotero Analytical Writer
 
 ## Canonical template
 
-For every Note creation or content update, read `D:\ResearchVault\模板\论文精读模板.md` first and use it as the sole structural authority. Start a new Note by copying that template; for an existing Note, update it in place and normalize its body to the template rather than introducing a parallel structure.
+Resolve `vault_root` from the user-specified Vault or the current agent workspace that contains the target Note. For every Note creation or content update, first read the current Vault's own 精读模板 when it exists. Otherwise use the bundled fallback at `../../templates/论文精读模板.md`. The selected template is the structural authority for this task. Start a new Note from it; update an existing Note in place rather than introducing a parallel structure. All output paths must be real paths relative to `vault_root`, never machine-specific examples.
 
 Keep the visible section order exactly as follows:
 
@@ -46,11 +46,11 @@ zotero_key: "Q22PFLNV"
 pdf_key: "4RMSR7ZR"
 doi: "..."
 collection: "创新经济地理"
-note_path: "论文库/创新经济地理/论文标题.md"
-fulltext_path: "fulltext/创新经济地理/Q22PFLNV.md"
+note_path: "02vault/创新经济地理/论文标题.md"
+fulltext_path: "03fulltext/创新经济地理/Q22PFLNV.md"
 ```
 
-Do not batch-rewrite untouched historical Notes. When updating a specified Note, normalize that same file to the template and preserve verified content and stable identity; never create a duplicate Note. Add only confirmable fields and fulltext entry points. Treat `zotero_key` as the primary key and `pdf_key` as the attachment key. Prefer `note/<collection>/` for new Notes while continuing to support the Vault's current `论文库/` paths.
+New Analytical Notes are written only to `02vault/<collection>/<paper>.md`; new Fulltext records are written only to `03fulltext/<collection>/<zotero_key>.md`. Historical `note/` and `论文库/` files may be read during migration, but are never destinations for new files. Historical `fulltext/` links may be resolved as a read fallback; normalize a path only when updating that same Note.
 
 ## 原文引用规则
 
@@ -71,6 +71,6 @@ Do not batch-rewrite untouched historical Notes. When updating a specified Note,
 
 ## 写入与索引
 
-1. 先判定是新建还是更新指定 Note；两种情况都先读取当前模板。更新时允许重排正文以匹配模板，但不得改变稳定身份或制造重复 Note。
-2. 在基本信息区的链接行加入 `全文 Markdown：[[fulltext/<collection>/<zotero_key>]]`（路径存在时），并保留可验证的 Zotero 入口。
+1. 先判定是新建还是更新指定 Note；两种情况都先读取当前 Vault 模板或仓库随附模板。更新时允许重排正文以匹配模板，但不得改变稳定身份或制造重复 Note。
+2. 在基本信息区的链接行加入 `全文 Markdown：[[03fulltext/<collection>/<zotero_key>]]`（路径存在时），并保留可验证的 Zotero 入口。
 3. 新建论文笔记时才刷新四个根 Dataview 索引；更新既有 Note 不触发全库批量重写，但若标题、路径或索引字段变化，定向刷新受影响索引。

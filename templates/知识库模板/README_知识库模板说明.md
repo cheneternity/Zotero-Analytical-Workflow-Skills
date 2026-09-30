@@ -11,6 +11,7 @@
 | `方法模板.md` | 模型、统计方法、空间分析方法 | 说明用途、假设、参数、诊断与误用 |
 | `关系模板.md` | X→Y、X↔Y、机制链 | 组织方向、强度、非线性、异质性与因果证据 |
 | `争议模板.md` | 文献结论冲突 / 理论争议 | 对照竞争观点并解释分歧来源 |
+| `综合模板.md` | 多个主题、关系或争议的成熟综合 | 跨页综合并保留 claim 级证据边界 |
 
 ---
 
@@ -25,21 +26,22 @@
 - 下一步缺什么证据？
 
 ### 2. 区分证据状态
-建议统一使用：
+页面级 `evidence_status` 只使用 Frozen Schema 定义的：
 
 - `fulltext_verified`：关键结论已由全文核验。
-- `note_supported`：目前只由正式 Literature Note 支持，尚未全文定向核验。
+- `note_only`：页面来源目前为 Analytical Notes，尚未全文定向核验。
 - `mixed`：页面同时包含以上两类证据。
-- `provisional`：临时综合判断，证据尚不足。
+
+`note_supported` 和 `interpretation` 是 claim-level verification state，不能填入页面级 `evidence_status`。
 
 ### 3. 区分证据角色
 关系与主题页中建议标记：
 
 - `direct`：研究直接检验该结论。
 - `conditional`：结论依赖特定尺度、模型、情境或参数。
-- `mechanistic`：主要支持机制链中的某一环。
+- `mechanism`：主要支持机制链中的某一环。
 - `contextual`：提供背景或外部有效性证据。
-- `counter`：与当前主判断相反或构成限制。
+- `related`：相关但不承担更强的直接、机制或条件支持。反向证据仍使用合适的角色，并通过正文和 `agreement: conflicting` 表达冲突；不得新增 `counter` 角色。
 
 ### 4. 不跨越证据边界
 以下情形不得自动写成一般规律：
@@ -91,7 +93,7 @@
 2. 结论与证据来源可追溯；
 3. 至少说明一个边界条件；
 4. 没有把相关性写成因果性；
-5. `fulltext_verified` 与 `note_supported` 状态没有混淆；
+5. 页面级 `evidence_status` 与 claim-level verification state 没有混淆；
 6. 研究空白来自证据缺口，而非泛泛而谈；
 7. 能与其他概念 / 方法 / 关系页形成双向链接。
 8. 对关系、争议和综合页，来源可由 `source_notes` 追溯到正式 Analytical Note 与 `zotero_key`。

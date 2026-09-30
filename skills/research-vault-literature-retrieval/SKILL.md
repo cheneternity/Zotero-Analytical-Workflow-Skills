@@ -1,6 +1,6 @@
 ---
 name: research-vault-literature-retrieval
-description: "ResearchVault 文献知识问题的默认检索技能。先从 02vault/_index 和 D:\\ResearchVault\\02vault 的 Analytical Notes 定位相关论文，再按需要定向进入对应 D:\\ResearchVault\\03fulltext MinerU Markdown，必要时回到 Zotero PDF 验证。若用户消息以‘基于当前 ResearchVault 项目文件检索’（或明确要求基于当前 ResearchVault 项目文件作答）开头，必须优先执行严格的项目文件检索后再回答。纯 Skill/Python/Git/文件整理/MinerU 调试等操作任务不自动触发文献检索。"
+description: "ResearchVault 文献知识问题的默认检索技能。先从当前 Vault 的 Analytical Notes 定位相关论文，再按需要定向进入对应 Fulltext，必要时回到 Zotero PDF 验证。若用户明确要求基于当前项目文件检索，优先执行严格的项目文件检索后再回答。纯 Skill、代码、Git、文件整理和转换工具调试任务不自动触发文献检索。"
 ---
 
 # Research Vault Literature Retrieval
@@ -16,11 +16,11 @@ Analytical Notes 负责定位和理解论文；MinerU Fulltext 负责补充、�
 
 不要把论文库和全文库作为两个平级数据库并行搜索，也不要把 Fulltext 当作默认论文发现层。
 
-## 目录与身份规则
+## 工作区与身份规则
 
-- D:\ResearchVault\02vault 是 PRIMARY RETRIEVAL LAYER 和 SEMANTIC RETRIEVAL LAYER。
-- D:\ResearchVault\03fulltext 是 SUPPLEMENTARY ORIGINAL-TEXT LAYER 和 SOURCE DETAIL LAYER。
-- 两个目录必须物理分离；不得把 Fulltext 放入 02vault，也不得把 Analytical Note 放入 03fulltext。
+- 使用用户明确指定的 Vault；否则使用当前 agent 已打开且确认包含该 Vault 的工作区。将其作为本轮 `vault_root`，从实际文件与链接中发现 Analytical Note、Fulltext、Knowledge 和索引目录。
+- 新建与默认检索路径固定为 `02vault/`（Analytical Notes）、`03fulltext/`（Fulltext）和 `01knowledge/`。迁移期间可按现有链接读取 `note/`、`论文库/`、`fulltext/`、`knowledge/` 等 legacy 内容；不要将新内容写入 legacy 目录。
+- Note 与 Fulltext 应保持逻辑分层。依赖目录名区分时，先确认实际结构；不得仅凭文件名认定其类型。
 - 两层属于同一篇论文时，统一使用 zotero_key。
 - Note → Fulltext 优先通过 fulltext_path，其次通过 zotero_key，最后才允许唯一的 title fallback。
 - Fulltext → Note 通过 note_path，并同时核对 zotero_key 和 pdf_key。
@@ -82,7 +82,7 @@ Analytical Notes 负责定位和理解论文；MinerU Fulltext 负责补充、�
 
 ## Knowledge-aware routing
 
-Keep NOTE-FIRST RETRIEVAL. Knowledge (`D:\ResearchVault\01knowledge`) is an optional derived-synthesis routing layer for concepts, methods, relationships, controversies, and research-direction/gap questions. It never replaces the Analytical Note or original-text evidence chain.
+Keep NOTE-FIRST RETRIEVAL. The active Vault's Knowledge area is an optional derived-synthesis routing layer for concepts, methods, relationships, controversies, and research-direction/gap questions. It never replaces the Analytical Note or original-text evidence chain.
 
 Classify each question with [references/retrieval-routing.md](references/retrieval-routing.md) before retrieval. For paper-specific and exact-source questions, begin directly with the Analytical Note. For broad synthesis, start from Knowledge only to identify the relevant claims/pages, then return to their supporting Notes; use targeted Fulltext only for the precise point that needs verification.
 
@@ -96,7 +96,7 @@ Knowledge-assisted routing does not authorize a default fulltext-wide scan, raw-
 
 ### STEP 2 — Analytical-note Index
 
-按以下顺序读取 `D:\ResearchVault\02vault\_index\` 中存在的页面，缺失则跳过：
+按以下顺序读取当前 Analytical Note 目录下 `_index/` 中存在的页面，缺失则跳过：
 
 1. 文献索引.md
 2. 研究主题索引.md
@@ -107,9 +107,9 @@ Knowledge-assisted routing does not authorize a default fulltext-wide scan, raw-
 
 ### STEP 3 — Analytical Note Retrieval
 
-正常文献发现只能先搜索 D:\ResearchVault\02vault。搜索 title、theme、methodology、core_variable、key_finding、relevance、中文正文、英文术语、作者和 keywords。
+正常文献发现先搜索本轮已解析的 Analytical Note 目录。搜索 title、theme、methodology、core_variable、key_finding、relevance、中文正文、英文术语、作者和 keywords。
 
-绝不能以 D:\ResearchVault\03fulltext 作为正常检索第一步。
+绝不能以 Fulltext 目录作为正常检索第一步。
 
 ### STEP 4 — Read Candidate Notes
 
@@ -167,11 +167,11 @@ Use MinerU Fulltext to supplement, verify, refine, trace, and quote Analytical N
 
 默认只对已定位论文做 targeted search，例如：
 
-D:\ResearchVault\03fulltext\能耗\TTD9LZ5H.md
+03fulltext/<collection>/<zotero_key>.md
 
 根据 Note 中的 building height、building volume、building lifespan、random forest、SHAP 或对应英文原句搜索。
 
-禁止默认执行 D:\ResearchVault\03fulltext 的全库扫描。仅以下情况允许例外：
+禁止默认扫描整个 Fulltext 目录。仅以下情况允许例外：
 
 1. 用户明确要求直接在全文中搜索某术语；
 2. 用户要求找正文中出现某个确切词组的论文；
@@ -209,15 +209,15 @@ type: literature-fulltext 不得作为普通文献记录出现。物理隔离不
 
 ## 五个逻辑测试
 
-1. “有哪些论文研究建筑高度与环境绩效？”  
-   Root Index → 论文库 → Analytical Notes → 返回相关论文，不扫描 fulltext。
-2. “A、B、C 三篇如何定义 building height？”  
+1. “有哪些论文研究建筑高度与环境绩效？”
+   `02vault/_index/` → `02vault/` Analytical Notes → 返回相关论文，不扫描 `03fulltext/`。
+2. “A、B、C 三篇如何定义 building height？”
    Notes → 确认 A/B/C → 分别 resolve Fulltext → 只搜索三篇全文 → 比较定义。
-3. “第二篇作者关于结论的原话？”  
+3. “第二篇作者关于结论的原话？”
    第二篇 Note → fulltext_path → Fulltext → exact quote → context。
-4. “这句话在 PDF 第几页？”  
+4. “这句话在 PDF 第几页？”
    Note → Fulltext → page mapping 或 PDF Verify；不可靠时返回 unknown。
-5. “根据整个论文库梳理研究方向？”  
+5. “根据整个论文库梳理研究方向？”
    大量 Analytical Notes → 研究框架 → 关键论文 → 选择性 Fulltext 核验，不读取几十篇全文。
 
 最终原则：
@@ -233,8 +233,8 @@ VERIFY THE SOURCE.
 以下问题必须按 paper-level candidate pool 处理：文献综述、已有研究发现、共识与争议、指标方向比较、方法比较、研究缺口、直接/间接/中介效应。
 
 1. **Topic discovery**：Knowledge Notes 只负责导航同义词、指标、方法和候选研究；正式候选必须回到 `scope=papers` 的 Analytical Note 结果。
-2. **Candidate collection**：为每个语义主题维护候选池，并跨所有 query 合并。优先使用 Gateway 返回的 `paper_id`，必要时依次使用 Zotero Key、DOI、唯一规范化标题。Analytical Note、Fulltext 和 Knowledge Note 的文件命中不得直接当作论文数；同一论文多次命中只能计 1 篇。
+2. **Candidate collection**：为每个语义主题维护候选池，并跨所有 query 合并。优先使用 Gateway 返回的 `paper_id`，必要时依次使用 `zotero_key`、DOI、唯一规范化标题作为去重身份。Analytical Note、Fulltext 和 Knowledge Note 的文件命中不得直接当作论文数；同一论文多次命中只能计 1 篇。
 3. **Per-query accounting**：每次 Search 都记录 `query`、`raw_hits`、`unique_papers_this_query`、`new_unique_papers`、`master_unique_papers`、`page`、`has_more` 和 `next_page`。Gateway 的 `total_unique_papers` 是该 query 跨页的总数，不是跨 query 的候选池总数；跨 query 的池必须由模型继续合并。
 4. **Pagination and coverage**：使用 `scope=papers` 和 `page_size=30`（旧客户端可用 `top_k=30`）。只要 `has_more=true` 且候选池未达到最低覆盖，就必须请求 `next_page`；不能把当前页、文件数或核验数当作论文数。综述候选池最低目标为 15 篇，默认目标为 20 篇，一般覆盖范围为 20–30 篇。
-5. **Allowed stopping conditions**：候选收集仅可在以下任一条件成立时停止：`master_unique_papers >= 20`（或用户明确指定的目标）；已执行多个语义不同的 query 且每个 query 的所有页面均已到尾部（`has_more=false`）；或连续 2–3 个概念不同的扩展 query 均只产生 `new_unique_papers <= 1`，且没有出现新的指标、机制、方法、尺度或结果类型。单个 zero-new query、结果重叠、已经找到几篇高相关论文或已经核验 5–7 篇，均不是停止理由。若最终少于 15 篇，必须报告 query、页面、`has_more` 和候选统计，并区分数据不足与检索覆盖不足。
+5. **Allowed stopping conditions**：综述默认目标为 20 篇，最低覆盖目标为 15 篇（除非用户指定其他数量）。候选收集仅可在以下任一条件成立时停止：`master_unique_papers >= 20`；已执行多个语义不同的 query 且每个 query 的所有页面均已到尾部（`has_more=false`）；或连续 2–3 个概念不同的扩展 query 均只产生 `new_unique_papers <= 1`，且没有出现新的指标、机制、方法、尺度或结果类型。单个 zero-new query、结果重叠、已经找到几篇高相关论文或已经核验 5–7 篇，均不是停止理由。若最终少于 15 篇，必须报告 query、页面、`has_more` 和候选统计，并区分数据不足与检索覆盖不足。
 6. **Verification and synthesis**：完成候选池和初筛后，才选择 CORE/RELEVANT 论文进入 `Analytical Note → matching Fulltext` 核验；最后再综合一致方向、冲突方向、直接效应和中介机制，并报告检索覆盖块。
