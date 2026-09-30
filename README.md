@@ -143,3 +143,57 @@ The validators and retrieval instructions can read historical `fulltext/` links 
 ## Tests and CI
 
 Run the dependency-free release smoke tests with `python -m unittest discover -s tests -v`. GitHub Actions runs those tests and Python syntax compilation without requiring a live Zotero profile, MinerU installation, PDF, or private Vault.
+
+---
+
+## 本机环境与本地约定（fork 保留区）
+
+> 以下内容由本机 fork（`add-missing-scripts`）保留，上游可移植化改动不会覆盖此处。合并上游时请整块保留。
+
+### 环境说明
+
+本机（Windows）的实际绝对路径不写在此处，而是集中放在仓库根目录的 `config.toml`（已被 `.gitignore` 忽略，仅本机生效、不会随 fork 发布，也不会被上游合并覆盖）。可用 `config.toml` 的 `[paths]` 或环境变量覆盖：
+
+- `paths.vault_root` / `RESEARCHVAULT_ROOT`
+- `paths.zotero_data_dir` / `ZOTERO_DATA_DIR`
+- `paths.mineru_executable` / `MINERU_EXECUTABLE`
+- `paths.archive_root` / `RESEARCHVAULT_ARCHIVE_ROOT`
+
+### 本机 Vault 目录约定
+
+本机 Obsidian 库（`vault_root`）沿用库自身的既有布局，而非上游文档示例中的 `01knowledge` / `02vault` / `03fulltext`：
+
+- `Research/Fulltext` — 论文全文
+- `Research/Papers` — 论文条目
+- `wiki/` — 知识页（`wiki/index.md` 总目录、`wiki/log.md` 追加式日志、`wiki/hot.md` 近期上下文缓存）
+- `基础知识/`、`Template/`、`Fig/`、`.raw/`（`.raw` 为不可变原始材料）
+- 库根 `AGENTS.md` 记录库自身的写入规范，优先遵循
+
+需要迁移到上游规范布局时，运行 `python tools/init_vault.py --vault-root <路径>` 只补齐缺失目录与模板，不改动既有文件。
+
+### 使用建议
+
+- 如果你是把这些 skill 用于 Codex 或类似代理系统，建议保持当前目录结构不变。
+- 精读笔记与知识库页面的结构权威是 `vault_root` 下的本地模板目录；写入前先读取实际模板，不要依赖本文件中的示例路径。
+
+### 脚本说明（本机补充 + 上游可移植版）
+
+上游可移植版本（权威，配置驱动，推荐在自动化流程中使用）：
+
+- `tools/run_mineru_production.py` — 单篇 MinerU 生产转换（含本机移植的 loopback 免代理与 modelscope 默认源修复）
+- `tools/validate_research_vault_literature_links.py` — Note ↔ Fulltext 链接校验器
+- `skills/research-vault-knowledge-maintainer/scripts/validate_research_vault_knowledge.py` — Knowledge Wiki 校验器
+
+本机补充脚本（历史遗留，与上游同名脚本功能重叠，保留仅为兼容旧调用路径）：
+
+- `skills/zotero-fulltext-archiver/scripts/mineru_batch_runner.py` — 串行批量转换（上游无对应实现）
+- `skills/zotero-fulltext-archiver/scripts/run_mineru_production.py` — 旧版单篇转换（已被 `tools/` 版本取代）
+- `skills/zotero-fulltext-archiver/scripts/validate_research_vault_literature_links.py` — 旧版链接校验（已被 `tools/` 版本取代）
+
+各脚本的用法、参数与自检方法见 [SCRIPTS.md](SCRIPTS.md)。
+
+### 后续可继续补充
+
+- 增加示例输入与输出
+- 增加安装说明或依赖说明
+- 为每个 skill 单独补充测试样例或演示数据
