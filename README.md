@@ -152,23 +152,29 @@ Run the dependency-free release smoke tests with `python -m unittest discover -s
 
 ### 环境说明
 
-仓库内容目前默认基于 Windows 路径习惯编写，并保留了你当前环境中的默认目录，例如：
+本机（Windows）的实际绝对路径不写在此处，而是集中放在仓库根目录的 `config.toml`（已被 `.gitignore` 忽略，仅本机生效、不会随 fork 发布，也不会被上游合并覆盖）。可用 `config.toml` 的 `[paths]` 或环境变量覆盖：
 
-- Vault 根目录：`D:\ResearchVault`
-- 精读笔记模板：`D:\ResearchVault\模板\论文精读模板.md`
-- 知识库模板：`D:\ResearchVault\模板\知识库模板`
-- 历史笔记目录：`D:\ResearchVault\note`
-- MinerU 可执行文件：`D:\MinerU\.venv\Scripts\mineru.exe`
-- 归档/暂存根目录：`D:\ResearchVault_Archive`
+- `paths.vault_root` / `RESEARCHVAULT_ROOT`
+- `paths.zotero_data_dir` / `ZOTERO_DATA_DIR`
+- `paths.mineru_executable` / `MINERU_EXECUTABLE`
+- `paths.archive_root` / `RESEARCHVAULT_ARCHIVE_ROOT`
 
-上述本机路径同时写入仓库根目录的 `config.toml`（已被 `.gitignore` 忽略，仅本机生效），供上游可移植脚本（`tools/`）按 `paths.vault_root` 等键解析。也可用环境变量覆盖：`RESEARCHVAULT_ROOT`、`ZOTERO_DATA_DIR`、`MINERU_EXECUTABLE`、`RESEARCHVAULT_ARCHIVE_ROOT`。
+### 本机 Vault 目录约定
 
-如果在别的机器或仓库环境中使用，建议通过 `config.toml`、环境变量或命令行参数覆盖这些默认路径，而不是直接依赖硬编码默认值。
+本机 Obsidian 库（`vault_root`）沿用库自身的既有布局，而非上游文档示例中的 `01knowledge` / `02vault` / `03fulltext`：
+
+- `Research/Fulltext` — 论文全文
+- `Research/Papers` — 论文条目
+- `wiki/` — 知识页（`wiki/index.md` 总目录、`wiki/log.md` 追加式日志、`wiki/hot.md` 近期上下文缓存）
+- `基础知识/`、`Template/`、`Fig/`、`.raw/`（`.raw` 为不可变原始材料）
+- 库根 `AGENTS.md` 记录库自身的写入规范，优先遵循
+
+需要迁移到上游规范布局时，运行 `python tools/init_vault.py --vault-root <路径>` 只补齐缺失目录与模板，不改动既有文件。
 
 ### 使用建议
 
 - 如果你是把这些 skill 用于 Codex 或类似代理系统，建议保持当前目录结构不变。
-- `zotero-analytical-writer` 使用 `D:\ResearchVault\模板\论文精读模板.md`；知识库维护 skill 使用 `D:\ResearchVault\模板\知识库模板`。
+- 精读笔记与知识库页面的结构权威是 `vault_root` 下的本地模板目录；写入前先读取实际模板，不要依赖本文件中的示例路径。
 
 ### 脚本说明（本机补充 + 上游可移植版）
 

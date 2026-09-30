@@ -36,6 +36,8 @@ def main() -> int:
     parser.add_argument("--config", type=Path)
     parser.add_argument("--method", choices=("auto", "txt", "ocr"), default="auto")
     parser.add_argument("--timeout", type=int, default=3600, help="hard timeout in seconds (default: 3600)")
+    parser.add_argument("--model-source", default=None,
+                        help="MinerU model download source: modelscope, huggingface, or local (default: modelscope, or $MINERU_MODEL_SOURCE)")
     args = parser.parse_args()
     source = args.input.expanduser().resolve()
     settings = load_config(args.config)
@@ -71,8 +73,21 @@ def main() -> int:
     status_path.write_text(json.dumps(status, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     timed_out = False
     with (output / "mineru.stdout.log").open("w", encoding="utf-8") as stdout, (output / "mineru.stderr.log").open("w", encoding="utf-8") as stderr:
+        # MinerU's CLI starts a local API and health-checks it over 127.0.0.1.
+        # If a system HTTP proxy is set, those localhost requests are hijacked
+        # and return 503, stalling startup. Exempt loopback for the child.
+        # Model source: --model-source wins, then a caller-set env var, then
+        # the China-friendly modelscope default.
+        child_env = dict(os.environ)
+        no_proxy = child_env.get("NO_PROXY") or child_env.get("no_proxy") or ""
+        if no_proxy:
+            no_proxy += ","
+        no_proxy += "127.0.0.1,localhost,::1"
+        child_env["NO_PROXY"] = no_proxy
+        child_env["no_proxy"] = no_proxy
+        child_env["MINERU_MODEL_SOURCE"] = args.model_source or child_env.get("MINERU_MODEL_SOURCE") or "modelscope"
         process_options = {"creationflags": getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)} if os.name == "nt" else {"start_new_session": True}
-        process = subprocess.Popen(command, stdout=stdout, stderr=stderr, **process_options)
+        process = subprocess.Popen(command, stdout=stdout, stderr=stderr, env=child_env, **process_options)
         try:
             return_code = process.wait(timeout=args.timeout)
         except subprocess.TimeoutExpired:
