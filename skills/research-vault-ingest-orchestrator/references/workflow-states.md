@@ -10,7 +10,7 @@ These states describe process progress only. They do not replace evidence roles,
 | `NOTE_TEMPLATE_REPAIRED` | Existing Analytical Note was normalized to the canonical template without changing its stable identity | Continue to pair/Knowledge checks |
 | `KNOWLEDGE_UPDATED` | Existing or gated-new Knowledge was conservatively updated and validated | Final log |
 | `NO_KNOWLEDGE_CHANGE` | Paper is complete but adds no durable Knowledge change | Final log; success |
-| `FULLTEXT_DEFERRED` | PDF/runner condition prevents Fulltext now | Retain accurate partial evidence state |
+| `FULLTEXT_DEFERRED` | Required PDF access or conversion capability is unavailable | Retain accurate partial evidence state |
 | `NOTE_DEFERRED` | Note cannot yet be responsibly created | Retry after source material is available |
 | `PDF_NOT_FOUND` | Resolved item has no usable attachment | Retry with Zotero repair/user input |
 | `KEY_CONFLICT` | Identity or attachment mapping is ambiguous | Human review required |

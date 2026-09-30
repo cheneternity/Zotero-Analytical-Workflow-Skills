@@ -1,0 +1,6 @@
+# Copy to config.toml and edit paths for this machine.
+[paths]
+vault_root = ""
+zotero_data_dir = ""
+mineru_executable = ""
+archive_root = ""

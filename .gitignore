@@ -1,2 +1,5 @@
+config.toml
+.venv/
 __pycache__/
-*.pyc
+*.py[cod]
+.pytest_cache/

@@ -65,4 +65,4 @@ Machine metadata belongs only in `01knowledge/.meta/`; it must not be linked fro
 
 ## Templates
 
-Use the six templates in this directory: `knowledge-theme-template.md`, `knowledge-concept-template.md`, `knowledge-method-template.md`, `knowledge-relation-template.md`, `knowledge-controversy-template.md`, and `knowledge-synthesis-template.md`.
+Use the six canonical user templates in [`../../../templates/知识库模板/`](../../../templates/知识库模板/): `主题模板.md`, `概念模板.md`, `方法模板.md`, `关系模板.md`, `争议模板.md`, and `综合模板.md`. Do not maintain a second copy under the Skill references directory.
