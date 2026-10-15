@@ -68,7 +68,8 @@ def main() -> int:
             except sqlite3.OperationalError:
                 creators = []
         collections = [r[0] for r in db.execute("SELECT c.collectionName FROM collectionItems ci JOIN collections c ON c.collectionID=ci.collectionID WHERE ci.itemID=?", (item_id,))]
-        attachments = db.execute("SELECT a.itemID, a.key, a.path, a.contentType FROM items i JOIN itemAttachments a USING(itemID) WHERE a.parentItemID=?", (item_id,)).fetchall()
+        # Real Zotero keeps item keys in `items`; `itemAttachments` has no `key` column (verified on Zotero 10.0.6, userdata schema v130).
+        attachments = db.execute("SELECT a.itemID, i.key AS key, a.path, a.contentType FROM itemAttachments a JOIN items i ON i.itemID = a.itemID WHERE a.parentItemID=?", (item_id,)).fetchall()
         pdfs = []
         for attachment in attachments:
             path_value = attachment["path"] or ""
@@ -119,7 +120,13 @@ def main() -> int:
         print(json.dumps(output, ensure_ascii=False, indent=2))
         return 0
     except sqlite3.OperationalError as exc:
-        print(f"FAIL: Zotero database could not be read (it may be locked or mid-upgrade): {exc}; close Zotero or retry after sync settles", file=sys.stderr)
+        detail = str(exc).lower()
+        if "locked" in detail or "busy" in detail:
+            print(f"FAIL: Zotero database is locked (it may be mid-upgrade or mid-sync): {exc}; close Zotero or retry after sync settles", file=sys.stderr)
+        elif "no such column" in detail or "no such table" in detail:
+            print(f"FAIL: this Zotero database schema is not supported by the helper: {exc}; the helper expects item keys in `items` and no `key` column on `itemAttachments`", file=sys.stderr)
+        else:
+            print(f"FAIL: Zotero database could not be read: {exc}", file=sys.stderr)
         return 2
     finally:
         try:

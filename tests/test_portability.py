@@ -224,6 +224,7 @@ class PortabilityTests(unittest.TestCase):
             (storage / ".zotero-ft-cache").write_text("cached text", encoding="utf-8")
             db_path = data / "zotero.sqlite"
             db = sqlite3.connect(db_path)
+            # Fixture mirrors the real Zotero schema: item keys live in `items`, itemAttachments has no `key` column.
             db.executescript("""
                 CREATE TABLE items(itemID INTEGER PRIMARY KEY, key TEXT, itemTypeID INTEGER);
                 CREATE TABLE fields(fieldID INTEGER PRIMARY KEY, fieldName TEXT);
@@ -233,7 +234,7 @@ class PortabilityTests(unittest.TestCase):
                 CREATE TABLE itemCreators(itemID INTEGER, creatorID INTEGER, orderIndex INTEGER);
                 CREATE TABLE collections(collectionID INTEGER PRIMARY KEY, collectionName TEXT);
                 CREATE TABLE collectionItems(collectionID INTEGER, itemID INTEGER);
-                CREATE TABLE itemAttachments(itemID INTEGER, key TEXT, parentItemID INTEGER, path TEXT, contentType TEXT);
+                CREATE TABLE itemAttachments(itemID INTEGER, parentItemID INTEGER, linkMode INTEGER, contentType TEXT, charsetID INTEGER, path TEXT, syncState INTEGER);
                 CREATE TABLE itemAnnotations(itemID INTEGER, parentItemID INTEGER, type TEXT, authorName TEXT, comment TEXT, text TEXT, pageLabel TEXT);
                 CREATE TABLE itemNotes(itemID INTEGER, parentItemID INTEGER, note TEXT);
             """)
@@ -250,7 +251,7 @@ class PortabilityTests(unittest.TestCase):
             db.execute("INSERT INTO itemCreators VALUES (1, 1, 0)")
             db.execute("INSERT INTO collections VALUES (1, 'Methods')")
             db.execute("INSERT INTO collectionItems VALUES (1, 1)")
-            db.execute("INSERT INTO itemAttachments VALUES (2, 'PDFKEY1', 1, 'storage:paper.pdf', 'application/pdf')")
+            db.execute("INSERT INTO itemAttachments(itemID, parentItemID, linkMode, contentType, charsetID, path, syncState) VALUES (2, 1, 0, 'application/pdf', NULL, 'storage:paper.pdf', NULL)")
             db.execute("INSERT INTO itemAnnotations VALUES (3, 2, 'highlight', 'Ada', '', 'verified text', '2')")
             db.execute("INSERT INTO itemNotes VALUES (4, 1, '<p>Research note</p>')")
             db.commit()
